@@ -1,0 +1,88 @@
+﻿@model IEnumerable<FarmaSaludMVC.Models.Reserva>
+
+@{
+    ViewData["Title"] = "Panel de Administración";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Gestión de Reservas - FarmaSalud</h2>
+        <form asp-action="EjecutarLimpieza" method="post">
+            <button type="submit" class="btn btn-danger">
+                <i class="bi bi-clock-history"></i> Ejecutar Limpieza (24h)
+            </button>
+        </form>
+    </div>
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill"></i> @TempData["Mensaje"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <table class="table table-striped shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Cliente</th>
+                <th>Fecha Reserva</th>
+                <th>Límite</th>
+                <th>Estado</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in Model)
+            {
+                <tr>
+                    <td>@r.Id</td>
+                    <td>@r.Cliente?.Nombre @r.Cliente?.Apellido</td>
+                    <td>@r.FechaReserva.ToString("g")</td>
+                    <td>@r.FechaLimite.ToString("g")</td>
+                    <td>
+                        <span class="badge @(r.Estado == "En espera" ? "bg-warning text-dark" : "bg-success")">
+                            @r.Estado
+                        </span>
+                    </td>
+                    <td style="min-width: 220px;">
+                        <div class="d-flex justify-content-end align-items-center">
+
+                            <div style="width: 110px;" class="me-2 text-end">
+                                @if (r.ReservasDetalles != null)
+                                {
+                                    @foreach (var detalle in r.ReservasDetalles)
+                                    {
+                                        if (!string.IsNullOrEmpty(detalle.RutaReceta))
+                                        {
+                                            <a href="@Url.Action("VerReceta", "Admin", new { nombreArchivo = detalle.RutaReceta })"
+                                               target="_blank" class="btn btn-sm btn-outline-primary w-100">
+                                                <i class="bi bi-eye"></i> Receta
+                                            </a>
+                                            break;
+                                        }
+                                    }
+                                }
+                            </div>
+
+                            <div style="width: 100px;">
+                                @if (r.Estado == "En espera")
+                                {
+                                    <form asp-action="Finalizar" method="post" style="display:inline;">
+                                        <input type="hidden" name="id" value="@r.Id" />
+                                        <button type="submit" class="btn btn-sm btn-success w-100"
+                                                onclick="return confirm('¿Confirmas que la reserva ha sido entregada?')">
+                                            <i class="bi bi-check-lg"></i> Finalizar
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

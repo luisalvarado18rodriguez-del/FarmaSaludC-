@@ -1,0 +1,87 @@
+﻿@model FarmaSaludMVC.ViewModels.LoginVM
+
+@{
+    Layout = null;
+    ViewData["Title"] = "Ingreso Clientes";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - FarmaSalud</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <style>
+        /* Usamos los mismos tonos que el Sidebar lateral */
+        :root {
+            --verde-fuerte: #2e7d32;
+            --verde-claro: #e8f5e9;
+        }
+
+        .btn-verde {
+            background-color: var(--verde-fuerte);
+            border-color: var(--verde-fuerte);
+            color: white;
+        }
+
+            .btn-verde:hover {
+                background-color: #1b5e20;
+                color: white;
+            }
+
+        .text-verde {
+            color: var(--verde-fuerte) !important;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="container">
+        <div class="row justify-content-center align-items-center" style="min-height: 100vh;">
+            <div class="col-11 col-sm-8 col-md-6 col-lg-4">
+                <div class="card border-0 shadow-lg my-5">
+                    <div class="card-body p-4 p-md-5">
+                        <h2 class="text-center mb-4 text-verde font-weight-bold">FarmaSalud</h2>
+
+                        <form asp-action="Login" method="post">
+                            <div class="mb-3">
+                                <label asp-for="Email" class="form-label">Correo electrónico</label>
+                                <input asp-for="Email" class="form-control form-control-lg" placeholder="nombre@correo.com" />
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="Password" class="form-label">Contraseña</label>
+                                <input asp-for="Password" class="form-control form-control-lg" type="password" />
+                                <span asp-validation-for="Password" class="text-danger small"></span>
+                            </div>
+
+                            <button type="submit" class="btn btn-verde btn-lg w-100 py-2 shadow-sm mt-3">Ingresar</button>
+
+                            <div asp-validation-summary="ModelOnly" class="text-danger mt-3 small"></div>
+                        </form>
+
+                        <hr class="my-4" />
+
+                        <div class="text-center">
+                            <p class="mb-2 text-muted">¿Aún no tienes cuenta?</p>
+                            <a asp-action="Register" asp-controller="Account" class="btn btn-outline-success btn-sm w-100 py-2">
+                                Crear una cuenta nueva
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+
+</body>
+</html>

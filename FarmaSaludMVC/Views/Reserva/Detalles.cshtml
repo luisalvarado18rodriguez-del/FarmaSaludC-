@@ -1,0 +1,45 @@
+﻿@model FarmaSaludMVC.Models.Reserva
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white d-flex justify-content-between">
+            <h4>Detalles de la Reserva #@Model.Id</h4>
+            <span class="badge bg-light text-primary">@Model.Estado</span>
+        </div>
+        <div class="card-body">
+            <p><strong>Fecha:</strong> @Model.FechaReserva.ToString("g")</p>
+            <p><strong>Recojo límite:</strong> @Model.FechaLimite.ToString("g")</p>
+            <hr />
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Medicamento</th>
+                        <th>Cantidad</th>
+                        <th>Precio Unit.</th>
+                        <th class="text-end">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.ReservasDetalles)
+                    {
+                        <tr>
+                            <td>@item.Medicamento?.Nombre</td>
+                            <td>@item.Cantidad</td>
+                            <td>S/ @item.PrecioUnitario.ToString("F2")</td>
+                            <td class="text-end">S/ @((item.Cantidad * item.PrecioUnitario).ToString("F2"))</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr class="table-secondary">
+                        <td colspan="3" class="text-end"><strong>Total a pagar:</strong></td>
+                        <td class="text-end"><strong>S/ @Model.ReservasDetalles.Sum(d => d.Cantidad * d.PrecioUnitario).ToString("F2")</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <div class="card-footer">
+            <a asp-action="MisReservas" class="btn btn-secondary">Volver</a>
+        </div>
+    </div>
+</div>

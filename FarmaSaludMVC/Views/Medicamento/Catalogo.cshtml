@@ -1,0 +1,67 @@
+﻿@model IEnumerable<FarmaSaludMVC.ViewModels.MedicamentoCatalogoViewModel>
+
+@{
+    ViewData["Title"] = "Catálogo de Medicamentos";
+}
+
+<h2 class="mb-4">Nuestro Catálogo</h2>
+
+<form asp-action="Catalogo" method="get" class="row g-3 mb-4">
+    <div class="col-md-4">
+        <select name="categoriaId" class="form-select" onchange="this.form.submit()">
+            <option value="">Todas las categorías</option>
+            @foreach (var cat in ViewBag.Categorias)
+            {
+                <option value="@cat.Id" selected="@(ViewBag.CategoriaSeleccionada == cat.Id)">
+                    @cat.Nombre
+                </option>
+            }
+        </select>
+    </div>
+    <div class="col-md-2">
+        <a asp-action="Catalogo" class="btn btn-outline-secondary">Limpiar</a>
+    </div>
+</form>
+
+<div class="row">
+    @foreach (var item in Model)
+    {
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                @if (!string.IsNullOrEmpty(item.UrlImagen))
+                {
+                    <img src="@item.UrlImagen" class="card-img-top" alt="@item.Nombre" style="height: 200px; object-fit: contain;">
+                }
+                <div class="card-body">
+                    <h5 class="card-title">@item.Nombre</h5>
+                    <p class="card-text text-muted">@item.CategoriaNombre</p>
+                    <p class="fw-bold fs-4 text-primary">S/ @item.Precio</p>
+
+                    @if (item.RequiereReceta)
+                    {
+                        <span class="badge bg-warning text-dark mb-2">Requiere Receta Médica</span>
+                    }
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">Stock: @item.StockDisponible</small>
+                        <a asp-action="Detalle" asp-route-id="@item.Id" class="btn btn-outline-info btn-sm">Ver más</a>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-top-0">
+                    <form asp-controller="Carrito" asp-action="Agregar" method="post">
+                        <input type="hidden" name="id" value="@item.Id" />
+
+                        <div class="input-group mb-2">
+                            <span class="input-group-text">Cant.</span>
+                            <input type="number" name="cantidad" value="1" min="1" max="@item.StockDisponible" class="form-control" />
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 @(item.StockDisponible <= 0 ? "disabled" : "")">
+                            <i class="bi bi-cart-plus"></i> Agregar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+</div>

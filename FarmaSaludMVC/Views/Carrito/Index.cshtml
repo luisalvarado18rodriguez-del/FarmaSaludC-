@@ -1,0 +1,82 @@
+﻿@model IEnumerable<FarmaSaludMVC.ViewModels.CarritoItemViewModel>
+
+@{
+    ViewData["Title"] = "Mi Carrito";
+}
+
+<div class="container mt-4">
+    <h2>Tu Carrito de Compras</h2>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            El carrito está vacío. <a href="@Url.Action("Catalogo", "Medicamento")">Volver al catálogo</a>
+        </div>
+    }
+    else
+    {
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">@TempData["Error"]</div>
+        }
+
+        <form asp-controller="Reserva" asp-action="Confirmar" method="post" enctype="multipart/form-data">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Precio</th>
+                        <th>Cantidad</th>
+                        <th>Subtotal</th>
+                        <th>Receta Médica</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                @item.Nombre
+                                <input type="hidden" name="medicamentoIds" value="@item.MedicamentoId" />
+                            </td>
+                            <td>S/ @item.Precio</td>
+                            <td>@item.Cantidad</td>
+                            <td>S/ @item.Subtotal</td>
+                            <td>
+                                @if (item.RequiereReceta)
+                                {
+                                    <input type="file" class="form-control form-control-sm" name="archivosRecetas" required />
+                                    <small class="text-danger">* Obligatorio para este producto</small>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No requiere</span>
+                                }
+                            </td>
+                            <td>
+                                <a asp-controller="Carrito" asp-action="Eliminar" asp-route-id="@item.MedicamentoId" class="btn btn-danger btn-sm">Quitar</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <div class="card p-3 shadow-sm">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <a href="@Url.Action("Catalogo", "Medicamento")" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Seguir Comprando
+                        </a>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <h3 class="mb-3">Total a Pagar: S/ @ViewBag.Total</h3>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle"></i> Confirmar Reserva
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    }
+</div>

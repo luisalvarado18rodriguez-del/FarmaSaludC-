@@ -1,0 +1,79 @@
+﻿@model FarmaSaludMVC.Models.Medicamento
+
+@{
+    ViewData["Title"] = "Detalle del Medicamento";
+}
+
+<div class="container mt-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Catalogo">Catálogo</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.Nombre</li>
+        </ol>
+    </nav>
+
+    <div class="card shadow-sm">
+        <div class="row g-0">
+            <div class="col-md-5 bg-light d-flex align-items-center justify-content-center p-4">
+                @if (!string.IsNullOrEmpty(Model.UrlImagen))
+                {
+                    <img src="@Model.UrlImagen" class="img-fluid rounded-start" alt="@Model.Nombre" style="max-height: 400px;">
+                }
+                else
+                {
+                    <i class="bi bi-capsule" style="font-size: 10rem; color: #dee2e6;"></i>
+                }
+            </div>
+            <div class="col-md-7">
+                <div class="card-body p-4">
+                    <h1 class="display-6">@Model.Nombre</h1>
+                    <p class="text-muted fs-5">Categoría: @(Model.Categoria?.Nombre ?? "General")</p>
+
+                    <hr />
+
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <h3 class="text-primary">S/ @Model.Precio</h3>
+                        </div>
+                        <div class="col-6 text-end">
+                            @if (Model.RequiereReceta)
+                            {
+                                <span class="badge bg-danger fs-6"><i class="bi bi-file-earmark-medical"></i> Requiere Receta</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="bg-light p-3 rounded mb-4">
+                        <h6 class="text-uppercase fw-bold text-muted small">Información Técnica</h6>
+                        <div class="row mt-2">
+                            <div class="col-6">
+                                <strong>Lote:</strong> @Model.Lote
+                            </div>
+                            <div class="col-6">
+                                <strong>Vencimiento:</strong> @Model.FechaVencimiento.ToString("dd/MM/yyyy")
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <strong>Disponibilidad:</strong>
+                                <span class="@(Model.Stock > 0 ? "text-success" : "text-danger")">
+                                    @(Model.Stock > 0 ? $"{Model.Stock} unidades" : "Agotado")
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                        <form asp-controller="Carrito" asp-action="Agregar" method="post">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button type="submit" class="btn btn-success btn-lg px-5 @(Model.Stock <= 0 ? "disabled" : "")">
+                                <i class="bi bi-cart-plus"></i> Agregar al Carrito
+                            </button>
+                        </form>
+                        <a asp-action="Catalogo" class="btn btn-outline-secondary btn-lg">Regresar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

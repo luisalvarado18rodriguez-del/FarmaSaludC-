@@ -1,0 +1,125 @@
+@model IEnumerable<FarmaSaludMVC.Models.Usuario>
+
+@{
+    ViewData["Title"] = "Gestión de Usuarios";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-verde font-weight-bold">Registro de Usuarios</h2>
+    <a asp-action="Create" class="btn btn-success shadow-sm">
+        <i class="bi bi-person-plus-fill"></i> Nuevo Usuario
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Usuario / Email</th>
+                        <th class="text-center">Rol</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-end pe-4">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-verde-pastel text-verde d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-person-circle fs-5"></i>
+                                    </div>
+                                    <span class="fw-bold text-dark">@item.Email</span>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                @switch (item.Rol)
+                                {
+                                    case "SuperAdmin":
+                                        @* Un tono esmeralda oscuro, serio y distintivo *@
+                                        <span class="badge rounded-1 py-2 px-3" style="background-color: #1b5e20; color: #ffffff; font-size: 0.7rem; letter-spacing: 0.5px;">
+                                            SYSTEM
+                                        </span>
+                                        break;
+
+                                    case "Admin":
+                                        @* El verde corporativo que ya usas en el sidebar *@
+                                        <span class="badge rounded-1 py-2 px-3" style="background-color: #2e7d32; color: #ffffff; font-size: 0.7rem; letter-spacing: 0.5px;">
+                                            ADMINISTRADOR
+                                        </span>
+                                        break;
+
+                                    default:
+                                        @* Un gris neutro para el rol con menos privilegios *@
+                                        <span class="badge rounded-1 py-2 px-3 text-muted border" style="background-color: #f8f9fa; font-size: 0.7rem; letter-spacing: 0.5px;">
+                                            Cliente
+                                        </span>
+                                        break;
+                                }
+                            </td>
+                            <td class="text-center">
+                                @if (item.Activo)
+                                {
+                                    <span class="text-success fw-bold">
+                                        <i class="bi bi-check-circle-fill me-1"></i> Activo
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-danger fw-bold">
+                                        <i class="bi bi-x-circle-fill me-1"></i> Inactivo
+                                    </span>
+                                }
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group shadow-sm" role="group">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-secondary btn-sm" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-secondary btn-sm" title="Detalles">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm" title="Eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        .text-verde {
+            color: #2e7d32;
+        }
+
+        .bg-verde-pastel {
+            background-color: #e8f5e9;
+        }
+
+        .table thead th {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+            color: #666;
+            border-top: none;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: #f1f8f1;
+        }
+
+        .badge {
+            font-weight: 500;
+        }
+    </style>
+}
