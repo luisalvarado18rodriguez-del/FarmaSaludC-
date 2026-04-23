@@ -1,15 +1,18 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using FarmaSaludMVC.Data;
+﻿using FarmaSaludMVC.Data;
 using FarmaSaludMVC.Models;
-using FarmaSaludMVC.ViewModels;
 using FarmaSaludMVC.security;
+using FarmaSaludMVC.ViewModels;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace FarmaSaludMVC.Controllers
 {
+
+    [AllowAnonymous]
     public class AccountController : Controller
     {
         private readonly AppDbContext _context;

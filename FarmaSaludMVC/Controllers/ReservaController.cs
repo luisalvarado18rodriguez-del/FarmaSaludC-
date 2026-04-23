@@ -1,8 +1,10 @@
 ﻿using FarmaSaludMVC.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FarmaSaludMVC.Controllers
 {
+    [Authorize(Roles = "Cliente,Admin,SuperAdmin")]
     public class ReservaController : Controller
     {
         private readonly IReservaService _reservaService;

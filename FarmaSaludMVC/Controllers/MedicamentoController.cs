@@ -1,9 +1,11 @@
 ﻿using FarmaSaludMVC.Interfaces;
 using FarmaSaludMVC.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FarmaSaludMVC.Controllers
 {
+    [Authorize(Roles = "Cliente,Admin,SuperAdmin")]
     public class MedicamentoController : Controller
     {
         private readonly IMedicamentoService _service;

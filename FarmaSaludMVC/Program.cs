@@ -56,8 +56,8 @@ app.UseRouting();
 // IMPORTANTE: UseSession DEBE ir después de UseRouting y antes de UseAuthorization/MapControllerRoute
 app.UseSession();
 
-app.UseAuthorization();
-app.UseAuthentication(); // para autenticar xd
+app.UseAuthentication();
+app.UseAuthorization(); 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}");
@@ -79,8 +79,5 @@ using (var scope = app.Services.CreateScope())
         context.SaveChanges();
     }
 }
-
-app.Run();
-
 
 app.Run();
