@@ -140,7 +140,7 @@
                     </a>
                 </li>
 
-                @if (User.Identity.IsAuthenticated)
+                @if (User.Identity.IsAuthenticated && (User.IsInRole("Cliente")))
                 {
                     <li>
                         <a asp-controller="Carrito" asp-action="Index">

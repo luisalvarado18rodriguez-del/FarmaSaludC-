@@ -17,22 +17,24 @@ namespace FarmaSaludMVC.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Cliente")]
         public async Task<IActionResult> Confirmar(List<IFormFile> archivosRecetas)
         {
             var carrito = _carritoService.ObtenerCarrito();
             if (carrito == null || !carrito.Any()) return RedirectToAction("Index", "Carrito");
 
-            // Por ahora usaremos un ID de cliente fijo (1) hasta implementar el Login
-            int clienteIdSimulado = 1;
+            // AJUSTE: Extraer ID real del Claim
+            var clienteIdClaim = User.FindFirst("ClienteId")?.Value;
+            if (string.IsNullOrEmpty(clienteIdClaim)) return RedirectToAction("Login", "Account");
+
+            int clienteIdReal = int.Parse(clienteIdClaim);
 
             try
             {
-                int reservaId = await _reservaService.CrearReservaAsync(carrito, clienteIdSimulado, archivosRecetas);
+                // Usamos el ID real obtenido del usuario logueado
+                int reservaId = await _reservaService.CrearReservaAsync(carrito, clienteIdReal, archivosRecetas);
 
-                // Si se guarda con éxito, limpiamos el carrito
                 _carritoService.LimpiarCarrito();
-
-                // Usamos TempData para mostrar el mensaje de éxito como en el instructivo
                 TempData["Exito"] = $"Reserva #{reservaId} generada con éxito. Tienes 24 horas para recogerla.";
                 return RedirectToAction("MisReservas");
             }
@@ -43,17 +45,32 @@ namespace FarmaSaludMVC.Controllers
             }
         }
 
+        [Authorize(Roles = "Cliente")]
         public async Task<IActionResult> MisReservas()
         {
-            int clienteIdSimulado = 1;
-            var reservas = await _reservaService.GetReservasByClienteAsync(clienteIdSimulado);
+            // AJUSTE: Extraer ID real del Claim
+            var clienteIdClaim = User.FindFirst("ClienteId")?.Value;
+            if (string.IsNullOrEmpty(clienteIdClaim)) return RedirectToAction("Login", "Account");
+
+            int clienteIdReal = int.Parse(clienteIdClaim);
+
+            // El servicio ahora solo traerá las reservas de este cliente
+            var reservas = await _reservaService.GetReservasByClienteAsync(clienteIdReal);
             return View(reservas);
         }
+
         public async Task<IActionResult> Detalles(int id)
         {
             var reserva = await _reservaService.GetReservaDetalladaAsync(id);
 
             if (reserva == null) return NotFound();
+
+            // SEGURIDAD EXTRA: Si es un Cliente, verificar que la reserva le pertenezca
+            if (User.IsInRole("Cliente"))
+            {
+                var clienteId = int.Parse(User.FindFirst("ClienteId")?.Value ?? "0");
+                if (reserva.ClienteId != clienteId) return Forbid();
+            }
 
             return View(reserva);
         }

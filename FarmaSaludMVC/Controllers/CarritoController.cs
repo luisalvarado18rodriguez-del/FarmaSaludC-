@@ -27,6 +27,7 @@ namespace FarmaSaludMVC.Controllers
 
         // 2. Agregar al Carrito (Desde el catálogo)
         [HttpPost]
+        [Authorize(Roles = "Cliente")] // Asegura que solo clientes agreguen al carrito
         public async Task<IActionResult> Agregar(int id, int cantidad) // Añadimos el parámetro cantidad
         {
             var med = await _medicamentoService.GetByIdAsync(id);
