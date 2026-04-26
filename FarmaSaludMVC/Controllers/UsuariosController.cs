@@ -84,12 +84,22 @@ namespace FarmaSaludMVC.Controllers
             var usuario = await _context.Usuarios.FindAsync(id);
             if (usuario == null) return NotFound();
 
-            // También pasamos la lista en el Edit para que aparezca el dropdown
-            ViewBag.Roles = new List<SelectListItem>
+            // 1. Cargamos los Roles (asegúrate de que los Value coincidan con los de tu DB: "Admin", "Cliente", etc.)
+            var roles = new List<SelectListItem>
     {
         new SelectListItem { Value = "Cliente", Text = "Cliente" },
-        new SelectListItem { Value = "Admin", Text = "Administrador" }
+        new SelectListItem { Value = "Admin", Text = "Administrador" },
     };
+            // El cuarto parámetro marca el valor seleccionado automáticamente
+            ViewBag.Roles = new SelectList(roles, "Value", "Text", usuario.Rol);
+
+            // 2. Cargamos los Estados para el Baneo
+            var estados = new List<SelectListItem>
+    {
+        new SelectListItem { Value = "true", Text = "Cuenta Activa" },
+        new SelectListItem { Value = "false", Text = "Cuenta Inhabilitada (Baneo)" }
+    };
+            ViewBag.Estados = new SelectList(estados, "Value", "Text", usuario.Activo.ToString().ToLower());
 
             return View(usuario);
         }
@@ -101,9 +111,18 @@ namespace FarmaSaludMVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Email,Password,Rol,Activo")] Usuario usuario)
         {
-            if (id != usuario.Id)
+            if (id != usuario.Id) return NotFound();
+
+            // SEGURIDAD: Consultamos el usuario real en la DB para verificar su rol original
+            var usuarioEnDb = await _context.Usuarios.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
+
+            if (usuarioEnDb == null) return NotFound();
+
+           
+            if (usuarioEnDb.Rol == "SuperAdmin")
             {
-                return NotFound();
+                usuario.Activo = true; 
+                usuario.Rol = "SuperAdmin";
             }
 
             if (ModelState.IsValid)
@@ -112,19 +131,12 @@ namespace FarmaSaludMVC.Controllers
                 {
                     _context.Update(usuario);
                     await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!UsuarioExists(usuario.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    
                 }
-                return RedirectToAction(nameof(Index));
             }
             return View(usuario);
         }

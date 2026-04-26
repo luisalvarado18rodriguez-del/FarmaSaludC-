@@ -1,51 +1,94 @@
 @model FarmaSaludMVC.Models.Usuario
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Gestión de Seguridad";
 }
 
-<h1>Edit</h1>
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 text-dark fw-bold">Actualizar Permisos de Cuenta</h5>
+            </div>
+            <div class="card-body px-4 py-4">
+                <form asp-action="Edit">
+                    <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
 
-<h4>Usuario</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <label asp-for="Email" class="control-label"></label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
+                    @* IDs y Datos sensibles ocultos para no perderlos en el POST *@
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="Password" />
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label text-muted small fw-bold">IDENTIFICADOR DE USUARIO</label>
+                        <input asp-for="Email" class="form-control bg-light border-0 fw-bold" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Rol" class="form-label text-muted small fw-bold">NIVEL DE PRIVILEGIOS</label>
+                        @if (Model.Rol == "SuperAdmin")
+                        {
+                            <input type="text" class="form-control bg-light border-0" value="SYSTEM / SUPERADMIN" readonly />
+                            <input type="hidden" asp-for="Rol" />
+                        }
+                        else
+                        {
+                            <select asp-for="Rol" class="form-select border-0 bg-light shadow-sm" asp-items="ViewBag.Roles"></select>
+                        }
+                        <span asp-validation-for="Rol" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-muted small fw-bold">ESTADO DE ACCESO</label>
+                        @if (Model.Rol == "SuperAdmin")
+                        {
+                            <select class="form-select border-0 shadow-sm text-success fw-bold" disabled style="background-color: #f1f3f5;">
+                                <option>Acceso Permanente (Protegido)</option>
+                            </select>
+                            <input type="hidden" asp-for="Activo" value="true" />
+                        }
+                        else
+                        {
+                            <select asp-for="Activo" class="form-select border-0 shadow-sm @(Model.Activo ? "text-success" : "text-danger") fw-bold"
+                                    asp-items="ViewBag.Estados"
+                                    style="background-color: #f1f3f5;">
+                            </select>
+                        }
+                        <div class="form-text small mt-2">
+                            <i class="bi bi-shield-check me-1"></i>
+                            @(Model.Rol == "SuperAdmin" ? "Esta cuenta de sistema no puede ser inhabilitada." : "Determina si el usuario puede iniciar sesión en el sistema.")
+                        </div>
+                    </div>
+
+                    <hr class="text-muted opacity-25">
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a asp-action="Index" class="btn btn-light px-4 border">Cancelar</a>
+                        <button type="submit" class="btn btn-dark px-5 shadow-sm">
+                            Guardar Cambios
+                        </button>
+                    </div>
+                </form>
             </div>
-            <div class="form-group">
-                <label asp-for="Password" class="control-label"></label>
-                <input asp-for="Password" class="form-control" />
-                <span asp-validation-for="Password" class="text-danger"></span>
-            </div>
-            <div class="form-group mb-3">
-                <label asp-for="Rol" class="control-label font-weight-bold">Asignar Rol</label>
-                <select asp-for="Rol" asp-items="ViewBag.Roles" class="form-select">
-                    <option value="">-- Seleccione un Rol --</option>
-                </select>
-                <span asp-validation-for="Rol" class="text-danger"></span>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="Activo" /> @Html.DisplayNameFor(model => model.Activo)
-                </label>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Este script detecta cuando cambias el valor en el combo
+        document.getElementById('estadoSelector')?.addEventListener('change', function() {
+            if (this.value === "true") {
+                this.classList.remove('text-danger');
+                this.classList.add('text-success');
+            } else {
+                this.classList.remove('text-success');
+                this.classList.add('text-danger');
+            }
+        });
+    </script>
+
+    @* Esto carga las validaciones de lado del cliente (jQuery Validate) *@
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

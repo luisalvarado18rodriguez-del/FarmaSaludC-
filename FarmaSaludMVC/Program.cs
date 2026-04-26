@@ -42,15 +42,17 @@ builder.Services.AddSession(options =>
 
 var app = builder.Build();
 
-// --- 2. CONFIGURACIÓN DEL PIPELINE (MIDDLEWARE) ---
 
-if (!app.Environment.IsDevelopment())
-{
+
+//if (!app.Environment.IsDevelopment())    (Para visualizar errores y corregir descomenta el if)
+//{
     app.UseExceptionHandler("/Home/Error");
-}
+//}
 
+// Esto debe ir antes de app.UseRouting()
+app.UseStatusCodePagesWithReExecute("/Home/Error/{0}");
+app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
 
 // IMPORTANTE: UseSession DEBE ir después de UseRouting y antes de UseAuthorization/MapControllerRoute

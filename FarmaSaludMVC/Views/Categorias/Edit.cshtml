@@ -1,34 +1,44 @@
 @model FarmaSaludMVC.Models.Categoria
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Editar Categoría";
 }
 
-<h1>Edit</h1>
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 border-0">
+                <h5 class="mb-0 text-dark fw-bold text-center">
+                    <i class="bi bi-pencil-fill me-2 text-primary"></i>Modificar Categoría
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="Edit">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger small border-0"></div>
+                    <input type="hidden" asp-for="Id" />
 
-<h4>Categoria</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <label asp-for="Nombre" class="control-label"></label>
-                <input asp-for="Nombre" class="form-control" />
-                <span asp-validation-for="Nombre" class="text-danger"></span>
+                    <div class="mb-4">
+                        <label asp-for="Nombre" class="form-label text-muted small fw-bold">NOMBRE ACTUALIZADO</label>
+                        <input asp-for="Nombre" class="form-control bg-light border-0 shadow-sm py-2" />
+                        <span asp-validation-for="Nombre" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary py-2 shadow-sm fw-bold">
+                            <i class="bi bi-save me-1"></i>Guardar Cambios
+                        </button>
+                        <a asp-action="Index" class="btn btn-light py-2 border shadow-sm small text-muted">
+                            Cancelar y volver
+                        </a>
+                    </div>
+                </form>
             </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

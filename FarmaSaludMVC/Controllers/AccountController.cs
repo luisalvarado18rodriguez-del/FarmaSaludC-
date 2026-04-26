@@ -65,48 +65,51 @@ namespace FarmaSaludMVC.Controllers
         [HttpGet]
         public IActionResult Login() => View();
 
-        
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginVM model)
+        public async Task<IActionResult> Login(string email, string password)
         {
-            if (!ModelState.IsValid) return View(model);
+            // 1. Buscamos al usuario por su email
+            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
 
-            // 1. Buscamos al usuario solo por Email
-            var usuario = await _context.Usuarios
-                .FirstOrDefaultAsync(u => u.Email == model.Email);
-
-            // 2. Si existe, verificamos el Password usando BCrypt
-            if (usuario != null && SecurityHelper.VerificarPassword(model.Password, usuario.Password))
+            if (usuario != null)
             {
-                var cliente = await _context.Clientes
-                    .FirstOrDefaultAsync(c => c.UsuarioId == usuario.Id);
-
-                // --- CONFIGURACIÓN DE CLAIMS PARA ROLES ---
-                var claims = new List<Claim>
+                // 2. Verificamos si la cuenta está activa (Baneo)
+                if (!usuario.Activo)
                 {
-                    new Claim(ClaimTypes.Name, usuario.Email),
-                    new Claim(ClaimTypes.Role, usuario.Rol), // Esto permite que @User.IsInRole funcione
-                    new Claim("UsuarioId", usuario.Id.ToString())
-                };
+                    // CORRECCIÓN: No existe 'model', usamos ModelState directamente
+                    ModelState.AddModelError(string.Empty, "Esta cuenta ha sido inhabilitada por el administrador.");
+                    return View();
+                }
 
-                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                var authProperties = new AuthenticationProperties { IsPersistent = true };
+                // 3. VALIDACIÓN TÉCNICA (Inyectando la sal antigua)
+                bool esValido = security.SecurityHelper.VerificarPassword(password, usuario.Password);
 
-                await HttpContext.SignInAsync(
-                    CookieAuthenticationDefaults.AuthenticationScheme,
-                    new ClaimsPrincipal(claimsIdentity),
-                    authProperties);
+                if (esValido)
+                {
+                    // 4. Creación de Claims y Cookies
+                    var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, usuario.Email),
+                new Claim(ClaimTypes.Role, usuario.Rol),
+                new Claim("UsuarioId", usuario.Id.ToString())
+            };
 
-               
-                HttpContext.Session.SetInt32("UsuarioId", usuario.Id);
-                HttpContext.Session.SetString("ClienteNombre", cliente?.Nombre ?? "Usuario");
+                    var claimsIdentity = new ClaimsIdentity(claims, Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
 
-                return RedirectToAction("Catalogo", "Medicamento");
+                    await HttpContext.SignInAsync(
+                        Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme,
+                        new ClaimsPrincipal(claimsIdentity)
+                    );
+
+                    return RedirectToAction("Catalogo", "Medicamento");
+                }
             }
 
-            ModelState.AddModelError("", "Correo o contraseña no válidos.");
-            return View(model);
+            // 5. Mensaje genérico de error de credenciales
+            ModelState.AddModelError(string.Empty, "Correo o contraseña incorrectos.");
+            return View();
         }
 
         // POST: Account/Logout
