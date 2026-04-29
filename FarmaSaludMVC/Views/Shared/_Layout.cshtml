@@ -7,7 +7,12 @@
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    @await RenderSectionAsync("Styles", required: false)
 
     <style>
         :root {
@@ -154,7 +159,6 @@
                     </li>
                 }
 
-                @* Limitacion para Cliente: Solo Admin y SuperAdmin ven esto *@
                 @if (User.Identity.IsAuthenticated && (User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
                 {
                     <hr class="mx-3 my-3 opacity-25">
@@ -167,6 +171,12 @@
                     <li>
                         <a asp-controller="Categorias" asp-action="Index">
                             <i class="bi bi-tags"></i> <span>Categorías</span>
+                        </a>
+                    </li>
+                    @* Nuevo acceso a Gestión de Medicamentos *@
+                    <li>
+                        <a asp-controller="MedicamentosAdmin" asp-action="Index">
+                            <i class="bi bi-box-seam"></i> <span>Inventario</span>
                         </a>
                     </li>
                     <li>
@@ -211,6 +221,10 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

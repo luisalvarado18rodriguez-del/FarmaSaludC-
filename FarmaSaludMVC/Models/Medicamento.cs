@@ -12,7 +12,7 @@ namespace FarmaSaludMVC.Models
         public string Nombre { get; set; }
 
         [Required]
-        [Column(TypeName = "decimal(18,2)")] // Define precisión para moneda [cite: 819]
+        [Column(TypeName = "decimal(18,2)")] // Define precisión para moneda
         public decimal Precio { get; set; }
 
         [Required]

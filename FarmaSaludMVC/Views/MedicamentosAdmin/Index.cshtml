@@ -1,0 +1,113 @@
+﻿@model IEnumerable<FarmaSaludMVC.Models.Medicamento>
+
+@{
+    ViewData["Title"] = "Gestión de Inventario";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-capsule"></i> Panel de Inventario</h2>
+        <div>
+            <a asp-action="Alertas" class="btn btn-outline-warning me-2">
+                <i class="bi bi-exclamation-triangle"></i> Ver Alertas
+            </a>
+            <a asp-action="Crear" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Nuevo Medicamento
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <table class="table table-hover align-middle" id="tablaMedicamentos">
+                <thead class="table-light">
+                    <tr>
+                        <th>Imagen</th>
+                        <th>Medicamento</th>
+                        <th>Categoría</th>
+                        <th>Precio</th>
+                        <th>Stock</th>
+                        <th>Vencimiento</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        // Lógica de Semáforo para el Stock
+                        string claseStock = item.Stock <= 10 ? "bg-danger" : (item.Stock <= 20 ? "bg-warning text-dark" : "bg-success");
+
+                        // Lógica de Alerta de Vencimiento (3 meses)
+                        bool proximoAVencer = item.FechaVencimiento <= DateTime.Now.AddMonths(3);
+
+                        <tr>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.UrlImagen))
+                                {
+                                    <img src="~/uploads/productos/@item.UrlImagen" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;" />
+                                }
+                                else
+                                {
+                                    <img src="~/images/no-image.png" class="img-thumbnail" style="width: 50px;" />
+                                }
+                            </td>
+                            <td>
+                                <strong>@item.Nombre</strong><br />
+                                <small class="text-muted">Lote: @item.Lote</small>
+                            </td>
+                            <td>@item.Categoria?.Nombre</td>
+                            <td>S/ @item.Precio.ToString("F2")</td>
+                            <td>
+                                <span class="badge @claseStock">@item.Stock uds</span>
+                            </td>
+                            <td>
+                                <span class="@(proximoAVencer ? "text-danger fw-bold" : "")">
+                                    @item.FechaVencimiento.ToString("dd/MM/yyyy")
+                                    @if (proximoAVencer)
+                                    {
+                                        <i class="bi bi-calendar-event" title="Próximo a vencer"></i>
+                                    }
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group">
+                                    <a asp-action="Editar" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form asp-action="Eliminar" asp-route-id="@item.Id" method="post" style="display:inline;">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                onclick="return confirm('¿Estás seguro de eliminar este medicamento?');">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Esto inicializa el "Filtro Operativo" (DataTables)
+            $('#tablaMedicamentos').DataTable({
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
+                },
+                "order": [[4, "asc"]], // Ordena automáticamente por Stock (columna 4)
+                "columnDefs": [
+                    { "orderable": false, "targets": [0, 6] } // La imagen y las acciones no se ordenan
+                ]
+            });
+        });
+    </script>
+
+}

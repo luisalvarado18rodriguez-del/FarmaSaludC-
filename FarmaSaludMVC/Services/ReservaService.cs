@@ -149,6 +149,7 @@ namespace FarmaSaludMVC.Services
         public async Task<Reserva> GetReservaDetalladaAsync(int reservaId)
         {
             return await _context.Reservas
+                .Include(r => r.Cliente)
                 .Include(r => r.ReservasDetalles)
                     .ThenInclude(d => d.Medicamento)
                 .FirstOrDefaultAsync(r => r.Id == reservaId);
