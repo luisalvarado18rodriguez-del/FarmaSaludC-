@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FarmaSaludMVC.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260419220847_SincronizacionNombres")]
-    partial class SincronizacionNombres
+    [Migration("20260429224501_Migracion_Inicial_Completa")]
+    partial class Migracion_Inicial_Completa
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -135,6 +135,9 @@ namespace FarmaSaludMVC.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
 
                     b.Property<int>("ClienteId")
                         .HasColumnType("int");
@@ -263,7 +266,7 @@ namespace FarmaSaludMVC.Migrations
                         .IsRequired();
 
                     b.HasOne("FarmaSaludMVC.Models.Reserva", "Reserva")
-                        .WithMany()
+                        .WithMany("ReservasDetalles")
                         .HasForeignKey("ReservaId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -271,6 +274,11 @@ namespace FarmaSaludMVC.Migrations
                     b.Navigation("Medicamento");
 
                     b.Navigation("Reserva");
+                });
+
+            modelBuilder.Entity("FarmaSaludMVC.Models.Reserva", b =>
+                {
+                    b.Navigation("ReservasDetalles");
                 });
 #pragma warning restore 612, 618
         }

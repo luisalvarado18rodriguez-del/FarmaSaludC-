@@ -263,7 +263,7 @@ namespace FarmaSaludMVC.Migrations
                         .IsRequired();
 
                     b.HasOne("FarmaSaludMVC.Models.Reserva", "Reserva")
-                        .WithMany()
+                        .WithMany("ReservasDetalles")
                         .HasForeignKey("ReservaId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -271,6 +271,11 @@ namespace FarmaSaludMVC.Migrations
                     b.Navigation("Medicamento");
 
                     b.Navigation("Reserva");
+                });
+
+            modelBuilder.Entity("FarmaSaludMVC.Models.Reserva", b =>
+                {
+                    b.Navigation("ReservasDetalles");
                 });
 #pragma warning restore 612, 618
         }

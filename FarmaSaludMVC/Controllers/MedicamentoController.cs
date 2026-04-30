@@ -1,4 +1,5 @@
 ﻿using FarmaSaludMVC.Interfaces;
+using FarmaSaludMVC.Services;
 using FarmaSaludMVC.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -52,6 +53,12 @@ namespace FarmaSaludMVC.Controllers
             if (medicamento == null) return NotFound();
 
             return View(medicamento);
+        }
+        public async Task<IActionResult> Alertas()
+        {
+            // Este método ya filtra por < 3 meses o Stock > 50
+            var medicamentosEnRiesgo = await _service.GetMedicamentosEnRiesgoAsync();
+            return View(medicamentosEnRiesgo);
         }
     }
 }

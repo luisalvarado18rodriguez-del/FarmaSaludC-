@@ -5,6 +5,7 @@
 }
 
 <div class="container mt-5">
+    @* Navegación Breadcrumb *@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a asp-action="Catalogo">Catálogo</a></li>
@@ -12,65 +13,109 @@
         </ol>
     </nav>
 
-    <div class="card shadow-sm">
+    <div class="card shadow-sm border-0">
         <div class="row g-0">
-            <div class="col-md-5 bg-light d-flex align-items-center justify-content-center p-4">
+            @* Columna de Imagen *@
+            <div class="col-md-5 bg-white d-flex align-items-center justify-content-center p-4 border-end">
                 @if (!string.IsNullOrEmpty(Model.UrlImagen))
                 {
-                    <img src="@Model.UrlImagen" class="img-fluid rounded-start" alt="@Model.Nombre" style="max-height: 400px;">
+                    @* CORRECCIÓN: Etiqueta img correcta con ruta al servidor *@
+                    <img src="~/uploads/productos/@Model.UrlImagen"
+                         class="img-fluid rounded"
+                         alt="@Model.Nombre"
+                         style="max-height: 400px; object-fit: contain;">
                 }
                 else
                 {
-                    <i class="bi bi-capsule" style="font-size: 10rem; color: #dee2e6;"></i>
+                    <div class="text-center text-muted">
+                        <i class="bi bi-capsule" style="font-size: 10rem; opacity: 0.2;"></i>
+                        <p>Sin imagen disponible</p>
+                    </div>
                 }
             </div>
+
+            @* Columna de Detalles *@
             <div class="col-md-7">
                 <div class="card-body p-4">
-                    <h1 class="display-6">@Model.Nombre</h1>
-                    <p class="text-muted fs-5">Categoría: @(Model.Categoria?.Nombre ?? "General")</p>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h1 class="display-6 fw-bold">@Model.Nombre</h1>
+                            <p class="text-muted fs-5">Categoría: @(Model.Categoria?.Nombre ?? "General")</p>
+                        </div>
+                        @if (Model.RequiereReceta)
+                        {
+                            <span class="badge bg-danger p-2 shadow-sm">
+                                <i class="bi bi-file-earmark-medical"></i> REQUIERE RECETA
+                            </span>
+                        }
+                    </div>
 
                     <hr />
 
-                    <div class="row mb-3">
-                        <div class="col-6">
-                            <h3 class="text-primary">S/ @Model.Precio</h3>
-                        </div>
-                        <div class="col-6 text-end">
-                            @if (Model.RequiereReceta)
+                    <div class="mb-4">
+                        <h3 class="text-success fw-bold">S/ @Model.Precio.ToString("F2")</h3>
+                        <p class="small text-muted">Precio con impuestos incluidos.</p>
+                    </div>
+
+                    @* Cuadro de Información Técnica *@
+                    <div class="bg-light p-3 rounded mb-4 border">
+                        <h6 class="text-uppercase fw-bold text-muted small mb-3">Información del Producto</h6>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                @if (User.Identity.IsAuthenticated && (User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
                             {
-                                <span class="badge bg-danger fs-6"><i class="bi bi-file-earmark-medical"></i> Requiere Receta</span>
+                                <div class="text-muted small">Número de Lote</div>
+                                <div class="fw-bold">@Model.Lote</div>
+                                }
+                            </div>
+
+                            <div class="col-6">
+                                @if (User.Identity.IsAuthenticated && (User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
+                            {
+                                <div class="text-muted small">Fecha de Vencimiento</div>
+                                <div class="fw-bold">@Model.FechaVencimiento.ToString("dd/MM/yyyy")</div>
+                                }
+                            </div>
+                            <div class="col-12">
+                                <div class="text-muted small">Disponibilidad en Almacén</div>
+                                <div class="fw-bold @(Model.Stock > 0 ? "text-success" : "text-danger")">
+                                    <i class="bi @(Model.Stock > 0 ? "bi-check-circle" : "bi-x-circle")"></i>
+                                    @(Model.Stock > 0 ? $"{Model.Stock} unidades disponibles" : "Agotado temporalmente")
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @* Acciones *@
+                    @* En Views/Medicamento/Detalle.cshtml *@
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-start pt-3">
+                        @if (User.Identity.IsAuthenticated && User.IsInRole("Cliente"))
+                        {
+                            <form asp-controller="Carrito" asp-action="Agregar" method="post" class="me-md-2">
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <div class="input-group mb-3" style="max-width: 200px;">
+                                    <span class="input-group-text">Cant.</span>
+                                    <input type="number" name="cantidad" value="1" min="1" max="@Model.Stock" class="form-control" />
+                                </div>
+
+                                <button type="submit" class="btn btn-success btn-lg px-5 @(Model.Stock <= 0 ? "disabled" : "")">
+                                    <i class="bi bi-cart-plus"></i> Agregar al Carrito
+                                </button>
+                            </form>
+                        }
+
+                        <div class="align-self-end">
+                            <a asp-action="Catalogo" class="btn btn-outline-secondary btn-lg">Regresar</a>
+
+                            @* Opcional: Botón rápido de edición solo para Admin *@
+                            @if (User.Identity.IsAuthenticated && (User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
+                            {
+                                <a asp-controller="MedicamentosAdmin" asp-action="Editar" asp-route-id="@Model.Id" class="btn btn-primary btn-lg ms-2">
+                                    <i class="bi bi-pencil"></i> Editar Producto
+                                </a>
                             }
                         </div>
-                    </div>
-
-                    <div class="bg-light p-3 rounded mb-4">
-                        <h6 class="text-uppercase fw-bold text-muted small">Información Técnica</h6>
-                        <div class="row mt-2">
-                            <div class="col-6">
-                                <strong>Lote:</strong> @Model.Lote
-                            </div>
-                            <div class="col-6">
-                                <strong>Vencimiento:</strong> @Model.FechaVencimiento.ToString("dd/MM/yyyy")
-                            </div>
-                        </div>
-                        <div class="row mt-2">
-                            <div class="col-12">
-                                <strong>Disponibilidad:</strong>
-                                <span class="@(Model.Stock > 0 ? "text-success" : "text-danger")">
-                                    @(Model.Stock > 0 ? $"{Model.Stock} unidades" : "Agotado")
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-start">
-                        <form asp-controller="Carrito" asp-action="Agregar" method="post">
-                            <input type="hidden" name="id" value="@Model.Id" />
-                            <button type="submit" class="btn btn-success btn-lg px-5 @(Model.Stock <= 0 ? "disabled" : "")">
-                                <i class="bi bi-cart-plus"></i> Agregar al Carrito
-                            </button>
-                        </form>
-                        <a asp-action="Catalogo" class="btn btn-outline-secondary btn-lg">Regresar</a>
                     </div>
                 </div>
             </div>

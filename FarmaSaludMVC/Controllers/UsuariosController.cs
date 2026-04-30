@@ -22,9 +22,20 @@ namespace FarmaSaludMVC.Controllers
         }
 
         // GET: Usuarios
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string buscar)
         {
-            return View(await _context.Usuarios.ToListAsync());
+            
+            var usuarios = _context.Usuarios
+                .Where(u => u.Rol == "Admin" || u.Rol == "SuperAdmin");
+
+            if (!string.IsNullOrEmpty(buscar))
+            {
+                usuarios = usuarios.Where(s => s.Email.Contains(buscar));
+            }
+
+            ViewData["FiltroActual"] = buscar;
+
+            return View(await usuarios.ToListAsync());
         }
 
         // GET: Usuarios/Details/5
@@ -51,7 +62,6 @@ namespace FarmaSaludMVC.Controllers
             // Preparamos la lista de roles
             ViewBag.Roles = new List<SelectListItem>
     {
-        new SelectListItem { Value = "Cliente", Text = "Cliente" },
         new SelectListItem { Value = "Admin", Text = "Administrador" }
     };
             return View();
@@ -87,7 +97,6 @@ namespace FarmaSaludMVC.Controllers
             // 1. Cargamos los Roles (asegúrate de que los Value coincidan con los de tu DB: "Admin", "Cliente", etc.)
             var roles = new List<SelectListItem>
     {
-        new SelectListItem { Value = "Cliente", Text = "Cliente" },
         new SelectListItem { Value = "Admin", Text = "Administrador" },
     };
             // El cuarto parámetro marca el valor seleccionado automáticamente
@@ -104,26 +113,38 @@ namespace FarmaSaludMVC.Controllers
             return View(usuario);
         }
 
-        // POST: Usuarios/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Email,Password,Rol,Activo")] Usuario usuario)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Email,Activo,Rol")] Usuario usuario)
         {
             if (id != usuario.Id) return NotFound();
 
-            // SEGURIDAD: Consultamos el usuario real en la DB para verificar su rol original
-            var usuarioEnDb = await _context.Usuarios.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
+            // 1. Buscamos la data original de la DB (Clave para no perder datos)
+            var usuarioOriginal = await _context.Usuarios.AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == id);
 
-            if (usuarioEnDb == null) return NotFound();
+            if (usuarioOriginal == null) return NotFound();
 
-           
-            if (usuarioEnDb.Rol == "SuperAdmin")
+            // 2. Sincronizamos datos que no vienen en el form o son automáticos
+            usuario.Password = usuarioOriginal.Password;
+
+            // Si el rol venía nulo o vacío por ser cliente, lo recuperamos de la DB
+            if (string.IsNullOrEmpty(usuario.Rol))
             {
-                usuario.Activo = true; 
+                usuario.Rol = usuarioOriginal.Rol;
+            }
+
+            // 3. Protección de SuperAdmin
+            if (usuarioOriginal.Rol == "SuperAdmin")
+            {
+                usuario.Activo = true;
                 usuario.Rol = "SuperAdmin";
             }
+
+            // 4. Limpiamos errores de validación que no nos interesan (como el Password que no enviamos)
+            ModelState.Remove("Password");
+            ModelState.Remove("Rol");
 
             if (ModelState.IsValid)
             {
@@ -131,13 +152,20 @@ namespace FarmaSaludMVC.Controllers
                 {
                     _context.Update(usuario);
                     await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Index));
+
+                    return usuario.Rol == "Cliente"
+                        ? RedirectToAction(nameof(Clientes))
+                        : RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    
+                    if (!UsuarioExists(usuario.Id)) return NotFound();
+                    else throw;
                 }
             }
+
+            // Si llega aquí es porque falló el ModelState. Recargamos combos para que no se vea vacío.
+            PrepararCombos(usuario);
             return View(usuario);
         }
 
@@ -178,5 +206,40 @@ namespace FarmaSaludMVC.Controllers
         {
             return _context.Usuarios.Any(e => e.Id == id);
         }
+
+        [Authorize(Roles = "SuperAdmin")]
+        public async Task<IActionResult> Clientes(string buscar)
+        {
+            // Filtramos SOLO Clientes
+            var clientes = _context.Usuarios.Where(u => u.Rol == "Cliente");
+
+            if (!string.IsNullOrEmpty(buscar))
+            {
+                clientes = clientes.Where(s => s.Email.Contains(buscar));
+            }
+
+            ViewData["FiltroActual"] = buscar;
+            return View(await clientes.ToListAsync());
+        }
+
+        private void PrepararCombos(Usuario usuario)
+        {
+            // Llenamos la lista de Roles (solo Admin para este panel)
+            var roles = new List<SelectListItem>
+    {
+        new SelectListItem { Value = "Admin", Text = "Administrador" }
+    };
+            ViewBag.Roles = new SelectList(roles, "Value", "Text", usuario.Rol);
+
+            // Llenamos la lista de Estados (Activo/Baneado)
+            var estados = new List<SelectListItem>
+    {
+        new SelectListItem { Value = "true", Text = "Cuenta Activa" },
+        new SelectListItem { Value = "false", Text = "Cuenta Inhabilitada (Baneo)" }
+    };
+            // El cuarto parámetro asegura que el combo se quede en la opción que ya tiene el usuario
+            ViewBag.Estados = new SelectList(estados, "Value", "Text", usuario.Activo.ToString().ToLower());
+        }
+
     }
 }

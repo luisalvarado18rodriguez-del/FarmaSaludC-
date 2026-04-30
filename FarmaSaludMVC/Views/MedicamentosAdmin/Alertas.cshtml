@@ -1,0 +1,70 @@
+﻿@model IEnumerable<FarmaSaludMVC.Models.Medicamento>
+
+@{
+    ViewData["Title"] = "Panel de Decisiones Estratégicas";
+    var vencimientos = Model.Where(m => m.FechaVencimiento <= DateTime.Now.AddMonths(3)).OrderBy(m => m.FechaVencimiento);
+    var sobreStock = Model.Where(m => m.Stock > 50).OrderByDescending(m => m.Stock);
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-lightbulb text-warning"></i> Sugerencias de Promoción</h2>
+        <a asp-action="Index" class="btn btn-outline-secondary">Volver al Inventario</a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card border-danger mb-4 shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <i class="bi bi-calendar-x"></i> Riesgo de Vencimiento (Próximos 3 meses)
+                </div>
+                <div class="card-body">
+                    @if (!vencimientos.Any())
+                    {
+                        <p class="text-muted text-center">No hay productos en riesgo de vencimiento.</p>
+                    }
+                    @foreach (var item in vencimientos)
+                    {
+                        <div class="d-flex align-items-center border-bottom py-2">
+                            <img src="~/uploads/productos/@item.UrlImagen" class="rounded me-3" style="width: 45px; height: 45px; object-fit: cover;">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0">@item.Nombre</h6>
+                                <small class="text-danger fw-bold">Vence el: @item.FechaVencimiento.ToString("dd/MM/yyyy")</small>
+                            </div>
+                            <span class="badge bg-outline-danger text-danger border border-danger">VENCE PRONTO</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card border-primary mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-graph-down-arrow"></i> Baja Rotación (Exceso de Stock)
+                </div>
+                <div class="card-body">
+                    @if (!sobreStock.Any())
+                    {
+                        <p class="text-muted text-center">El stock está equilibrado.</p>
+                    }
+                    @foreach (var item in sobreStock)
+                    {
+                        <div class="d-flex align-items-center border-bottom py-2">
+                            <img src="~/uploads/productos/@item.UrlImagen" class="rounded me-3" style="width: 45px; height: 45px; object-fit: cover;">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0">@item.Nombre</h6>
+                                <small class="text-muted">Stock actual: @item.Stock unidades</small>
+                            </div>                           
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-info mt-3 shadow-sm border-0">
+        <i class="bi bi-info-circle-fill me-2"></i>
+        <strong>Consejo de Gestión:</strong> Los productos listados arriba son candidatos ideales para aparecer en los <strong>Banners de Publicidad</strong> de la página principal o para aplicarles descuentos temporales.
+    </div>
+</div>

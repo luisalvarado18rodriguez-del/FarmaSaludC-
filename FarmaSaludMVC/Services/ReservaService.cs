@@ -102,38 +102,26 @@ namespace FarmaSaludMVC.Services
         // 2. Lógica de Cancelación Automática (Regla de las 24 horas)
         public async Task<int> ProcesarCancelacionesAutomaticasAsync()
         {
-            var ahora = DateTime.Now;
+            // Tiempo de espera después de que pasó a "Terminada"
+            var tiempoLimite = DateTime.Now.AddSeconds(-10);
 
-            // CORRECCIÓN: Quitamos .Include(r => r.Id) porque no es una navegación.
-            // Solo necesitamos las reservas que cumplen la condición.
-            var expiradas = await _context.Reservas
-                .Where(r => r.Estado == "En espera" && r.FechaLimite < ahora && r.Activo == true)
+            // BUSQUEDA: Solo las que ya están "Terminada" y siguen "Activo = true"
+            var paraLimpiar = await _context.Reservas
+                .Where(r => r.Estado == "Terminada"&& r.Activo == true)
                 .ToListAsync();
-            // Guardamos la cantidad de reservas encontradas ANTES de procesar
-            int totalReservasAfectadas = expiradas.Count;
 
-            if (totalReservasAfectadas == 0) return 0;
+            if (paraLimpiar.Count == 0) return 0;
 
-            foreach (var reserva in expiradas)
+            foreach (var reserva in paraLimpiar)
             {
-                reserva.Estado = "Cancelada";
-                reserva.Activo = false; // Borrado lógico solicitado por el profesor
+                // NOTA: Aquí NO devolvemos stock porque si está "Terminada" 
+                // significa que el medicamento ya se vendió.
 
-                // Obtenemos los detalles para devolver el stock
-                var detalles = await _context.ReservasDetalles
-                    .Where(d => d.ReservaId == reserva.Id)
-                    .ToListAsync();
-
-                foreach (var d in detalles)
-                {
-                    var med = await _context.Medicamentos.FindAsync(d.MedicamentoId);
-                    if (med != null) med.Stock += d.Cantidad; // Devolución de stock                    
-                }
+                reserva.Activo = false; // Esto la quita del Dashboard
             }
-            await _context.SaveChangesAsync();
 
-            // Devolvemos el conteo de objetos procesados, no de filas SQL
-            return totalReservasAfectadas;
+            await _context.SaveChangesAsync();
+            return paraLimpiar.Count;
         }
         public async Task<bool> FinalizarReservaAsync(int reservaId)
         {
@@ -149,6 +137,7 @@ namespace FarmaSaludMVC.Services
         public async Task<Reserva> GetReservaDetalladaAsync(int reservaId)
         {
             return await _context.Reservas
+                .Include(r => r.Cliente)
                 .Include(r => r.ReservasDetalles)
                     .ThenInclude(d => d.Medicamento)
                 .FirstOrDefaultAsync(r => r.Id == reservaId);

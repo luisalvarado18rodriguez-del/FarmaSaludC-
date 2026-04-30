@@ -6,11 +6,66 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace FarmaSaludMVC.Migrations
 {
     /// <inheritdoc />
-    public partial class AgregandoProcesos : Migration
+    public partial class Migracion_Inicial_Completa : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "Categorias",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nombre = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Categorias", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Usuarios",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Email = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Password = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    Rol = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Activo = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Usuarios", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Medicamentos",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nombre = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Precio = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Stock = table.Column<int>(type: "int", nullable: false),
+                    Lote = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    FechaVencimiento = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    RequiereReceta = table.Column<bool>(type: "bit", nullable: false),
+                    UrlImagen = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    CategoriaId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Medicamentos", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Medicamentos_Categorias_CategoriaId",
+                        column: x => x.CategoriaId,
+                        principalTable: "Categorias",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateTable(
                 name: "Clientes",
                 columns: table => new
@@ -36,7 +91,7 @@ namespace FarmaSaludMVC.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Reserva",
+                name: "Reservas",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -44,13 +99,14 @@ namespace FarmaSaludMVC.Migrations
                     FechaReserva = table.Column<DateTime>(type: "datetime2", nullable: false),
                     FechaLimite = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Estado = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ClienteId = table.Column<int>(type: "int", nullable: false)
+                    ClienteId = table.Column<int>(type: "int", nullable: false),
+                    Activo = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Reserva", x => x.Id);
+                    table.PrimaryKey("PK_Reservas", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Reserva_Clientes_ClienteId",
+                        name: "FK_Reservas_Clientes_ClienteId",
                         column: x => x.ClienteId,
                         principalTable: "Clientes",
                         principalColumn: "Id",
@@ -79,9 +135,9 @@ namespace FarmaSaludMVC.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_ReservasDetalles_Reserva_ReservaId",
+                        name: "FK_ReservasDetalles_Reservas_ReservaId",
                         column: x => x.ReservaId,
-                        principalTable: "Reserva",
+                        principalTable: "Reservas",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -92,8 +148,13 @@ namespace FarmaSaludMVC.Migrations
                 column: "UsuarioId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Reserva_ClienteId",
-                table: "Reserva",
+                name: "IX_Medicamentos_CategoriaId",
+                table: "Medicamentos",
+                column: "CategoriaId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Reservas_ClienteId",
+                table: "Reservas",
                 column: "ClienteId");
 
             migrationBuilder.CreateIndex(
@@ -105,6 +166,12 @@ namespace FarmaSaludMVC.Migrations
                 name: "IX_ReservasDetalles_ReservaId",
                 table: "ReservasDetalles",
                 column: "ReservaId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Usuarios_Email",
+                table: "Usuarios",
+                column: "Email",
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -114,10 +181,19 @@ namespace FarmaSaludMVC.Migrations
                 name: "ReservasDetalles");
 
             migrationBuilder.DropTable(
-                name: "Reserva");
+                name: "Medicamentos");
+
+            migrationBuilder.DropTable(
+                name: "Reservas");
+
+            migrationBuilder.DropTable(
+                name: "Categorias");
 
             migrationBuilder.DropTable(
                 name: "Clientes");
+
+            migrationBuilder.DropTable(
+                name: "Usuarios");
         }
     }
 }

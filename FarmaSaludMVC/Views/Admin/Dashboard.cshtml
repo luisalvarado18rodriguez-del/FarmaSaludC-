@@ -46,9 +46,17 @@
                             @r.Estado
                         </span>
                     </td>
-                    <td style="min-width: 220px;">
+                    <td style="min-width: 320px;">
                         <div class="d-flex justify-content-end align-items-center">
 
+                            @*Botón de Detalle*@
+                            <div style="width: 100px;" class="me-2">
+                                <a asp-action="DetalleReserva" asp-route-id="@r.Id"
+                                   class="btn btn-sm btn-outline-secondary w-100">
+                                    <i class="bi bi-list-ul"></i> Detalle
+                                </a>
+                            </div>
+                            
                             <div style="width: 110px;" class="me-2 text-end">
                                 @if (r.ReservasDetalles != null)
                                 {

@@ -44,7 +44,7 @@ var app = builder.Build();
 
 
 
-//if (!app.Environment.IsDevelopment())    (Para visualizar errores y corregir descomenta el if)
+//if (!app.Environment.IsDevelopment()) /*(Para visualizar errores y corregir descomenta el if)*/
 //{
     app.UseExceptionHandler("/Home/Error");
 //}

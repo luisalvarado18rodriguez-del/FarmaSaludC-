@@ -7,211 +7,238 @@
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --verde-pastel: #e8f5e9;
-            --verde-fuerte: #2e7d32;
-            --verde-hover: #c8e6c9;
-            --sidebar-width: 260px;
+            --brand-emerald: #064e3b; /* Verde esmeralda profundo */
+            --brand-light: #f0fdf4;
+            --brand-accent: #10b981;
+            --admin-footer-bg: #f1f5f9;
+            --sidebar-width: 280px;
         }
 
         body {
+            background-color: #f8fafc;
+            font-family: 'Inter', sans-serif;
             margin: 0;
-            padding: 0;
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        #sidebar {
-            width: var(--sidebar-width);
-            height: 100vh;
-            background-color: var(--verde-pastel);
-            color: var(--verde-fuerte);
-            border-right: 1px solid #dee2e6;
-            position: fixed;
-            left: 0;
-            top: 0;
             display: flex;
             flex-direction: column;
-            z-index: 1030;
-        }
-
-        .sidebar-header {
-            padding: 25px 20px;
-            background-color: var(--verde-hover);
-            text-align: center;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-            .sidebar-header h3 {
-                margin: 0;
-                font-size: 1.3rem;
-                font-weight: 800;
-                color: var(--verde-fuerte);
-            }
-
-        .sidebar-menu {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px 0;
-        }
-
-        .menu-label {
-            padding: 10px 25px;
-            font-weight: 700;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            color: #6c757d;
-            letter-spacing: 1px;
-        }
-
-        #sidebar ul li a {
-            padding: 12px 25px;
-            display: flex;
-            align-items: center;
-            color: var(--verde-fuerte);
-            text-decoration: none;
-            transition: all 0.2s ease;
-        }
-
-            #sidebar ul li a i {
-                margin-right: 12px;
-                font-size: 1.2rem;
-            }
-
-            #sidebar ul li a:hover {
-                background-color: var(--verde-hover);
-                padding-left: 30px;
-            }
-
-        #content {
-            margin-left: var(--sidebar-width);
-            padding: 40px 20px;
             min-height: 100vh;
         }
 
-        .footer-sidebar {
-            padding: 15px;
-            font-size: 0.75rem;
-            border-top: 1px solid var(--verde-hover);
-            text-align: center;
-            background-color: var(--verde-pastel);
+        /* --- ADMIN: SIDEBAR --- */
+        #sidebar-admin {
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: #ffffff;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1050;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #e2e8f0;
         }
 
-        @@media (max-width: 992px) {
-            #sidebar {
-                width: 70px;
+        .admin-brand {
+            padding: 30px 24px;
+            background: var(--brand-emerald);
+            color: white;
+        }
+
+        .admin-nav-item {
+            padding: 12px 24px;
+            margin: 4px 16px;
+            color: #475569;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            border-radius: 8px !important;
+            transition: 0.2s;
+        }
+
+            .admin-nav-item:hover {
+                background: var(--brand-light);
+                color: var(--brand-emerald);
             }
 
-                #sidebar .sidebar-header h3, #sidebar .menu-label, #sidebar ul li a span {
-                    display: none;
-                }
+        /* --- CLIENTE: NAVBAR PROFESIONAL --- */
+        .navbar-premium {
+            background: var(--brand-emerald);
+            padding: 1rem 0;
+            border-bottom: 4px solid var(--brand-accent);
+        }
 
-            #content {
-                margin-left: 70px;
+        .nav-link-custom {
+            color: rgba(255,255,255,0.85) !important;
+            font-weight: 600;
+            padding: 0.5rem 1.5rem !important;
+        }
+
+            .nav-link-custom:hover {
+                color: #fff !important;
             }
 
-            #sidebar ul li a {
-                justify-content: center;
-                padding: 15px 0;
-            }
+        /* --- ESTRUCTURA DE CONTENIDO --- */
+        #main-wrapper {
+            flex: 1;
+            margin-left: @(User.IsInRole("Admin") || User.IsInRole("SuperAdmin") ? "var(--sidebar-width)" : "0");
+            padding-top: @(User.IsInRole("Admin") || User.IsInRole("SuperAdmin") ? "30px" : "100px");
+        }
 
-                #sidebar ul li a i {
-                    margin-right: 0;
-                }
+        /* --- FOOTERS MEJORADOS --- */
+        .footer-admin {
+            background: var(--admin-footer-bg);
+            padding: 15px 40px;
+            margin-left: var(--sidebar-width);
+            border-top: 1px solid #e2e8f0;
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        .footer-client {
+            background: #0f172a; /* Azul noche muy oscuro */
+            color: #94a3b8;
+            padding: 70px 0 30px;
+            margin-top: 50px;
+        }
+
+        /* EL TRUCO DEL 80% PARA QUE NO SE VEA APLASTADO */
+        .footer-constrained {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .footer-client h5 {
+            color: #fff;
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+        }
+
+        .dev-badge {
+            background: rgba(255,255,255,0.05);
+            padding: 10px 15px;
+            border-left: 3px solid var(--brand-accent);
+            margin-bottom: 10px;
+        }
+
+        .btn-modern {
+            border-radius: 0 !important;
+            font-weight: 700;
+            transition: 0.3s;
         }
     </style>
 </head>
 <body>
 
-    <nav id="sidebar">
-        <div class="sidebar-header">
-            <h3>FARMA SALUD</h3>
-        </div>
+    @if (User.Identity.IsAuthenticated && (User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
+    {
+        <nav id="sidebar-admin">
+            <div class="admin-brand text-center">
+                <h4 class="fw-bold m-0 text-white">FARMA SALUD</h4>
+                <small class="opacity-75">SISTEMA INTERNO</small>
+            </div>
+            <div class="py-4 flex-grow-1">
+                <a class="admin-nav-item" asp-controller="Admin" asp-action="Dashboard"><i class="bi bi-speedometer2 me-3"></i> Dashboard</a>
+                <a class="admin-nav-item" asp-controller="MedicamentosAdmin" asp-action="Index"><i class="bi bi-box-seam me-3"></i> Inventario</a>
+                <a class="admin-nav-item" asp-controller="Categorias" asp-action="Index"><i class="bi bi-tags me-3"></i> Categorías</a>
+                <a class="admin-nav-item" asp-controller="Usuarios" asp-action="Index"><i class="bi bi-people me-3"></i> Usuarios</a>
+            </div>
+            <div class="p-4 border-top">
+                <form asp-controller="Account" asp-action="Logout" method="post" id="logoutAdmin"></form>
+                <button onclick="document.getElementById('logoutAdmin').submit()" class="btn btn-outline-danger w-100 btn-modern">SALIR PANEL</button>
+            </div>
+        </nav>
+    }
+    else
+    {
+        <nav class="navbar navbar-expand-lg navbar-dark navbar-premium fixed-top">
+            <div class="container">
+                <a class="navbar-brand fw-bold fs-3" asp-controller="Medicamento" asp-action="Catalogo">
+                    <i class="bi bi-plus-square-fill me-2 text-accent"></i>FARMA SALUD
+                </a>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto align-items-center">
+                        <li class="nav-item"><a class="nav-link nav-link-custom" asp-controller="Medicamento" asp-action="Catalogo">PRODUCTOS</a></li>
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item"><a class="nav-link nav-link-custom" asp-controller="Carrito" asp-action="Index">CARRITO</a></li>
+                            <li class="nav-item"><a class="nav-link nav-link-custom" asp-controller="Reserva" asp-action="MisReservas">MIS PEDIDOS</a></li>
+                            <li class="nav-item ms-3">
+                                <form asp-controller="Account" asp-action="Logout" method="post" id="logoutCli"></form>
+                                <button onclick="document.getElementById('logoutCli').submit()" class="btn btn-outline-light btn-sm btn-modern px-3">SALIR</button>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item ms-3">
+                                <a class="btn btn-light text-success btn-modern px-4" asp-controller="Account" asp-action="Login">INGRESAR</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    }
 
-        <div class="sidebar-menu">
-            <ul class="list-unstyled">
-                <div class="menu-label">Tienda Virtual</div>
-                <li>
-                    <a asp-controller="Medicamento" asp-action="Catalogo">
-                        <i class="bi bi-capsule"></i> <span>Catálogo</span>
-                    </a>
-                </li>
-
-                @if (User.Identity.IsAuthenticated)
-                {
-                    <li>
-                        <a asp-controller="Carrito" asp-action="Index">
-                            <i class="bi bi-cart3"></i> <span>Mi Carrito</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a asp-controller="Reserva" asp-action="MisReservas">
-                            <i class="bi bi-calendar-check"></i> <span>Mis Reservas</span>
-                        </a>
-                    </li>
-                }
-
-                @* Limitacion para Cliente: Solo Admin y SuperAdmin ven esto *@
-                @if (User.Identity.IsAuthenticated && (User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
-                {
-                    <hr class="mx-3 my-3 opacity-25">
-                    <div class="menu-label">Administración</div>
-                    <li>
-                        <a asp-controller="Admin" asp-action="Dashboard">
-                            <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a asp-controller="Categorias" asp-action="Index">
-                            <i class="bi bi-tags"></i> <span>Categorías</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a asp-controller="Usuarios" asp-action="Index">
-                            <i class="bi bi-people"></i> <span>Usuarios</span>
-                        </a>
-                    </li>
-                }
-
-                <hr class="mx-3 my-3 opacity-25">
-
-                @if (User.Identity.IsAuthenticated)
-                {
-                    <li>
-                        <form asp-controller="Account" asp-action="Logout" method="post" id="logoutForm" class="d-none"></form>
-                        <a href="javascript:document.getElementById('logoutForm').submit()" class="text-danger">
-                            <i class="bi bi-box-arrow-left"></i> <span>Cerrar Sesión</span>
-                        </a>
-                    </li>
-                }
-                else
-                {
-                    <li>
-                        <a asp-controller="Account" asp-action="Login">
-                            <i class="bi bi-box-arrow-in-right"></i> <span>Iniciar Sesión</span>
-                        </a>
-                    </li>
-                }
-            </ul>
-        </div>
-
-        <div class="footer-sidebar text-muted">
-            &copy; 2026 - FarmaSalud
-        </div>
-    </nav>
-
-    <div id="content">
-        <main role="main" class="container-fluid">
+    <div id="main-wrapper">
+        <main role="main" class="container-fluid px-lg-5">
             @RenderBody()
         </main>
     </div>
 
+    @if (User.Identity.IsAuthenticated && (User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
+    {
+        <footer class="footer-admin d-flex justify-content-between">
+            <span>&copy; 2026 <b>FarmaSalud</b> | Trujillo - Perú</span>
+            <span class="text-uppercase fw-bold" style="letter-spacing: 1px;">Admin Mode</span>
+        </footer>
+    }
+    else
+    {
+        <footer class="footer-client">
+            <div class="footer-constrained">
+                <div class="row">
+                    <div class="col-lg-5 mb-5">
+                        <h5 class="text-success">FARMA SALUD</h5>
+                        <p class="pe-lg-5">Soluciones farmacéuticas de alta calidad con entrega inmediata en todo Trujillo. Tu salud es nuestra prioridad.</p>
+                        <div class="mt-4 small">
+                            <p class="mb-1"><i class="bi bi-geo-alt me-2 text-success"></i> Sede Central: Av. Larco 1230, Trujillo</p>
+                            <p><i class="bi bi-clock me-2 text-success"></i> Atención: Lun - Dom | 24 Horas</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 mb-5">
+                        <h5>DESARROLLO POR</h5>
+                        <div class="dev-badge">
+                            <span class="d-block fw-bold text-white">Luis Alonso Alvarado</span>
+                            <small>Estudiante de Informatica</small>
+                        </div>
+                        <div class="dev-badge">
+                            <span class="d-block fw-bold text-white">Johan Navarro</span>
+                            <small>Estudiante de Informatica</small>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 mb-5 text-lg-end">
+                        <h5>CONTACTO</h5>
+                        <p class="mb-1 fw-bold text-white">soporte@farmasalud.pe</p>
+                        <p class="small">Central: (044) 204060</p>
+                    </div>
+                </div>
+                <div class="border-top border-secondary mt-4 pt-4 text-center small">
+                    &copy; 2026 FarmaSalud Trujillo. Todos los derechos reservados.
+                </div>
+            </div>
+        </footer>
+    }
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

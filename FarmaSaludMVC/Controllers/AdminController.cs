@@ -1,6 +1,7 @@
 ﻿using FarmaSaludMVC.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.IO;
 
 namespace FarmaSaludMVC.Controllers
@@ -57,6 +58,18 @@ namespace FarmaSaludMVC.Controllers
             }
 
             return RedirectToAction("Dashboard");
+        }
+        [Authorize(Roles = "Admin,SuperAdmin")]
+        public async Task<IActionResult> DetalleReserva(int id)
+        {
+            // Buscamos la reserva incluyendo al usuario, los detalles y el medicamento de cada detalle
+            var reserva = await _reservaService.GetReservaDetalladaAsync(id);
+            if (reserva == null)
+            {
+                return NotFound();
+            }
+
+            return View(reserva);
         }
     }
 }

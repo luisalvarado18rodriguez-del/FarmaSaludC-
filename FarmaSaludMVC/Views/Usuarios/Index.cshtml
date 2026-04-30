@@ -11,6 +11,37 @@
     </a>
 </div>
 
+<div class="row mb-4">
+    <div class="col-md-6">
+        <form asp-action="Index" method="get" class="d-flex border rounded shadow-sm bg-white p-1">
+            <input type="text" name="buscar" value="@ViewData["FiltroActual"]"
+                   class="form-control border-0 shadow-none"
+                   placeholder="Buscar por email de usuario..." />
+
+            <button type="submit" class="btn btn-verde px-4">
+                <i class="bi bi-search"></i>
+            </button>
+           
+            @if (!string.IsNullOrEmpty(ViewData["FiltroActual"]?.ToString()))
+            {
+                <a asp-action="Index" class="btn btn-light border-start text-muted" title="Limpiar búsqueda">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            }
+        </form>
+        <br>
+
+        @if (User.IsInRole("SuperAdmin"))
+        {
+            <div class="mb-4">
+                <a asp-action="Clientes" class="btn btn-dark btn-modern">
+                    <i class="bi bi-people-fill me-2"></i> GESTIONAR CLIENTES
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
 <div class="card border-0 shadow-sm">
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -24,6 +55,15 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center py-5 text-muted">
+                                <i class="bi bi-info-circle fs-2 d-block mb-2"></i>
+                                No se encontraron usuarios que coincidan con la búsqueda.
+                            </td>
+                        </tr>
+                    }
                     @foreach (var item in Model)
                     {
                         <tr>
@@ -39,21 +79,18 @@
                                 @switch (item.Rol)
                                 {
                                     case "SuperAdmin":
-                                        @* Un tono esmeralda oscuro, serio y distintivo *@
                                         <span class="badge rounded-1 py-2 px-3" style="background-color: #1b5e20; color: #ffffff; font-size: 0.7rem; letter-spacing: 0.5px;">
                                             SYSTEM
                                         </span>
                                         break;
 
                                     case "Admin":
-                                        @* El verde corporativo que ya usas en el sidebar *@
                                         <span class="badge rounded-1 py-2 px-3" style="background-color: #2e7d32; color: #ffffff; font-size: 0.7rem; letter-spacing: 0.5px;">
                                             ADMINISTRADOR
                                         </span>
                                         break;
 
                                     default:
-                                        @* Un gris neutro para el rol con menos privilegios *@
                                         <span class="badge rounded-1 py-2 px-3 text-muted border" style="background-color: #f8f9fa; font-size: 0.7rem; letter-spacing: 0.5px;">
                                             Cliente
                                         </span>
@@ -105,6 +142,17 @@
             background-color: #e8f5e9;
         }
 
+        .btn-verde {
+            background-color: #2e7d32;
+            color: white;
+            border: none;
+        }
+
+            .btn-verde:hover {
+                background-color: #1b5e20;
+                color: white;
+            }
+
         .table thead th {
             font-size: 0.85rem;
             text-transform: uppercase;
@@ -120,6 +168,11 @@
 
         .badge {
             font-weight: 500;
+        }
+
+        /* Quitar borde azul del input al hacer click */
+        .form-control:focus {
+            box-shadow: none;
         }
     </style>
 }

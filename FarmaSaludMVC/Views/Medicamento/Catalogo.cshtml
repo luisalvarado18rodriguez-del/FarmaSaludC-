@@ -3,9 +3,44 @@
 @{
     ViewData["Title"] = "Catálogo de Medicamentos";
 }
+@* --- SECCIÓN DEL BANNER (CAROUSEL) --- *@
+<div id="carouselCatalogo" class="carousel slide shadow-sm mb-4" data-bs-ride="carousel">
+    <div class="carousel-indicators">
+        <button type="button" data-bs-target="#carouselCatalogo" data-bs-slide-to="0" class="active"></button>
+        <button type="button" data-bs-target="#carouselCatalogo" data-bs-slide-to="1"></button>
+    </div>
+    <div class="carousel-inner rounded-3">
+        @* Banner 1 *@
+        <div class="carousel-item active" data-bs-interval="4000">
+            <img src="~/images/banners/banner1.png" class="d-block w-100" alt="Promoción FarmaSalud"
+                 style="height: 300px; object-fit: cover;">
+            <div class="carousel-caption d-none d-md-block" style="background: rgba(0,0,0,0.4); border-radius: 10px;">
+                <h4 class="fw-bold">Cuidamos de tu Salud</h4>
+                <p>Reserva online y recoge en tienda. ¡Ahorra tiempo!</p>
+            </div>
+        </div>
+        @* Banner 2 *@
+        <div class="carousel-item" data-bs-interval="4000">
+            <img src="~/images/banners/banner2.png" class="d-block w-100" alt="Ofertas"
+                 style="height: 300px; object-fit: cover;">
+            <div class="carousel-caption d-none d-md-block" style="background: rgba(46, 125, 50, 0.6); border-radius: 10px;">
+                <h4 class="fw-bold">Ofertas de Temporada</h4>
+                <p>Consulta nuestros precios especiales en productos seleccionados.</p>
+            </div>
+        </div>
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#carouselCatalogo" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon"></span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#carouselCatalogo" data-bs-slide="next">
+        <span class="carousel-control-next-icon"></span>
+    </button>
+</div>
+@* --- FIN SECCIÓN DEL BANNER --- *@
 
-<h2 class="mb-4">Nuestro Catálogo</h2>
+<h2 class="mb-4"><i class="bi bi-shop"></i> Nuestro Catálogo</h2>
 
+@* Filtros de Categoría *@
 <form asp-action="Catalogo" method="get" class="row g-3 mb-4">
     <div class="col-md-4">
         <select name="categoriaId" class="form-select" onchange="this.form.submit()">
@@ -28,38 +63,58 @@
     {
         <div class="col-md-4 mb-4">
             <div class="card h-100 shadow-sm">
-                @if (!string.IsNullOrEmpty(item.UrlImagen))
-                {
-                    <img src="@item.UrlImagen" class="card-img-top" alt="@item.Nombre" style="height: 200px; object-fit: contain;">
-                }
+                @* LÓGICA DE IMAGEN CORREGIDA *@
+                <div class="text-center bg-light">
+                    @if (!string.IsNullOrEmpty(item.UrlImagen))
+                    {
+                        <img src="~/uploads/productos/@item.UrlImagen"
+                             class="card-img-top p-2"
+                             alt="@item.Nombre"
+                             style="height: 200px; width: auto; object-fit: contain;">
+                    }
+                    else
+                    {
+                        <img src="~/images/no-image.png"
+                             class="card-img-top p-2"
+                             style="height: 200px; width: auto; object-fit: contain;">
+                    }
+                </div>
+
                 <div class="card-body">
-                    <h5 class="card-title">@item.Nombre</h5>
-                    <p class="card-text text-muted">@item.CategoriaNombre</p>
-                    <p class="fw-bold fs-4 text-primary">S/ @item.Precio</p>
+                    <h5 class="card-title text-truncate">@item.Nombre</h5>
+                    <p class="card-text text-muted mb-1">@item.CategoriaNombre</p>
+                    <p class="fw-bold fs-4 text-success">S/ @item.Precio.ToString("F2")</p>
 
                     @if (item.RequiereReceta)
                     {
-                        <span class="badge bg-warning text-dark mb-2">Requiere Receta Médica</span>
+                        <span class="badge bg-warning text-dark mb-2">
+                            <i class="bi bi-file-earmark-medical"></i> Requiere Receta
+                        </span>
                     }
 
-                    <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex justify-content-between align-items-center mt-2">
                         <small class="text-muted">Stock: @item.StockDisponible</small>
-                        <a asp-action="Detalle" asp-route-id="@item.Id" class="btn btn-outline-info btn-sm">Ver más</a>
+                        <a asp-action="Detalle" asp-route-id="@item.Id" class="btn btn-outline-info btn-sm">Detalles</a>
                     </div>
                 </div>
+
+                @*<div class="card-footer bg-white border-top-0 pb-3">*@
                 <div class="card-footer bg-transparent border-top-0">
-                    <form asp-controller="Carrito" asp-action="Agregar" method="post">
-                        <input type="hidden" name="id" value="@item.Id" />
+                    @if (User.Identity.IsAuthenticated && User.IsInRole("Cliente"))
+                    {
+                        <form asp-controller="Carrito" asp-action="Agregar" method="post">
+                            <input type="hidden" name="id" value="@item.Id" />
 
-                        <div class="input-group mb-2">
-                            <span class="input-group-text">Cant.</span>
-                            <input type="number" name="cantidad" value="1" min="1" max="@item.StockDisponible" class="form-control" />
-                        </div>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text">Cant.</span>
+                                <input type="number" name="cantidad" value="1" min="1" max="@item.StockDisponible" class="form-control" />
+                            </div>
 
-                        <button type="submit" class="btn btn-success w-100 @(item.StockDisponible <= 0 ? "disabled" : "")">
-                            <i class="bi bi-cart-plus"></i> Agregar
-                        </button>
-                    </form>
+                            <button type="submit" class="btn btn-success w-100 @(item.StockDisponible <= 0 ? "disabled" : "")">
+                                <i class="bi bi-cart-plus"></i> Agregar
+                            </button>
+                        </form>
+                    }                 
                 </div>
             </div>
         </div>

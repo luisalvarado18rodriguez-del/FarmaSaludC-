@@ -14,7 +14,7 @@
                 <form asp-action="Edit">
                     <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
 
-                    @* IDs y Datos sensibles ocultos para no perderlos en el POST *@
+                    @* Datos ocultos para no perder integridad en el POST *@
                     <input type="hidden" asp-for="Id" />
                     <input type="hidden" asp-for="Password" />
 
@@ -24,21 +24,27 @@
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="Rol" class="form-label text-muted small fw-bold">NIVEL DE PRIVILEGIOS</label>
-                        @if (Model.Rol == "SuperAdmin")
+                        <label class="form-label fw-bold">NIVEL DE PRIVILEGIOS</label>
+
+                        @if (Model.Rol == "Cliente")
                         {
-                            <input type="text" class="form-control bg-light border-0" value="SYSTEM / SUPERADMIN" readonly />
-                            <input type="hidden" asp-for="Rol" />
+                            <input type="text" class="form-control bg-light" value="Cliente" readonly />
+                            <input type="hidden" asp-for="Rol" value="Cliente" />
+                        }
+                        else if (Model.Rol == "SuperAdmin")
+                        {
+                            <input type="text" class="form-control bg-light text-success fw-bold" value="Super Administrador" readonly />
+                            <input type="hidden" asp-for="Rol" value="SuperAdmin" />
                         }
                         else
                         {
-                            <select asp-for="Rol" class="form-select border-0 bg-light shadow-sm" asp-items="ViewBag.Roles"></select>
+                            <select asp-for="Rol" class="form-select" asp-items="ViewBag.Roles"></select>
                         }
-                        <span asp-validation-for="Rol" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label text-muted small fw-bold">ESTADO DE ACCESO</label>
+                        <label class="form-label fw-bold text-danger">ESTADO DE ACCESO</label>
+
                         @if (Model.Rol == "SuperAdmin")
                         {
                             <select class="form-select border-0 shadow-sm text-success fw-bold" disabled style="background-color: #f1f3f5;">
@@ -48,11 +54,14 @@
                         }
                         else
                         {
-                            <select asp-for="Activo" class="form-select border-0 shadow-sm @(Model.Activo ? "text-success" : "text-danger") fw-bold"
-                                    asp-items="ViewBag.Estados"
-                                    style="background-color: #f1f3f5;">
+                            <select asp-for="Activo" id="estadoSelector" class="form-select border-danger @(Model.Activo ? "text-success" : "text-danger") fw-bold">
+                                <option value="true">Cuenta Activa</option>
+                                <option value="false">Cuenta Inhabilitada (Baneo)</option>
                             </select>
                         }
+
+                        <span asp-validation-for="Activo" class="text-danger small"></span>
+
                         <div class="form-text small mt-2">
                             <i class="bi bi-shield-check me-1"></i>
                             @(Model.Rol == "SuperAdmin" ? "Esta cuenta de sistema no puede ser inhabilitada." : "Determina si el usuario puede iniciar sesión en el sistema.")
@@ -75,7 +84,7 @@
 
 @section Scripts {
     <script>
-        // Este script detecta cuando cambias el valor en el combo
+        // Script mejorado para cambiar el color del texto dinámicamente al seleccionar
         document.getElementById('estadoSelector')?.addEventListener('change', function() {
             if (this.value === "true") {
                 this.classList.remove('text-danger');
@@ -87,7 +96,6 @@
         });
     </script>
 
-    @* Esto carga las validaciones de lado del cliente (jQuery Validate) *@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }

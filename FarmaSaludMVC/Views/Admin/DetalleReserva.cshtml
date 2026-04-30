@@ -1,0 +1,99 @@
+﻿@model FarmaSaludMVC.Models.Reserva
+
+@{
+    ViewData["Title"] = "Detalle de Reserva";
+}
+
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Dashboard">Gestión de Reservas</a></li>
+            <li class="breadcrumb-item active">Detalle #@Model.Id</li>
+        </ol>
+    </nav>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Reserva N° @Model.Id</h5>
+            <span class="badge @(Model.Estado == "Terminada" ? "bg-success" : "bg-warning text-dark")">
+                @Model.Estado.ToUpper()
+            </span>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h6 class="text-muted text-uppercase small fw-bold">Datos del Cliente</h6>
+                    <p class="mb-1"><strong>Nombre:</strong> @Model.Cliente?.Nombre @Model.Cliente?.Apellido</p>
+                    <p class="mb-1"><strong>Email:</strong> <span class="text-muted">@Model.Cliente?.Email</span></p>
+                    <p class="mb-1"><strong>Fecha de Reserva:</strong> @Model.FechaReserva.ToString("dd/MM/yyyy HH:mm")</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <h6 class="text-muted text-uppercase small fw-bold">Vencimiento de Reserva</h6>
+                    <p class="text-danger fw-bold">@Model.FechaLimite.ToString("dd/MM/yyyy HH:mm")</p>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle border">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Producto</th>
+                            <th class="text-center">Cantidad</th>
+                            <th class="text-end">Precio Unit.</th>
+                            <th class="text-end">Subtotal</th>
+                            <th class="text-center">Receta</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var detalle in Model.ReservasDetalles)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@detalle.Medicamento?.Nombre</strong><br />
+                                    <small class="text-muted">Lote: @detalle.Medicamento?.Lote</small>
+                                </td>
+                                <td class="text-center">@detalle.Cantidad</td>
+                                <td class="text-end">S/ @detalle.PrecioUnitario.ToString("F2")</td>
+                                <td class="text-end">S/ @((detalle.Cantidad * detalle.PrecioUnitario).ToString("F2"))</td>
+                                <td class="text-center">
+                                    @if (!string.IsNullOrEmpty(detalle.RutaReceta))
+                                    {
+                                        <a asp-action="VerReceta" asp-route-nombreArchivo="@detalle.RutaReceta" target="_blank" class="btn btn-sm btn-outline-info">
+                                            <i class="bi bi-file-earmark-image"></i> Ver
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">No requiere</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-active">
+                            <td colspan="3" class="text-end fw-bold">TOTAL A COBRAR:</td>
+                            <td class="text-end fw-bold text-primary fs-5">
+                                S/ @Model.ReservasDetalles.Sum(d => d.Cantidad * d.PrecioUnitario).ToString("F2")
+                            </td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-between">
+            <a asp-action="Dashboard" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+            @if (Model.Estado == "En espera")
+            {
+                <form asp-action="Finalizar" asp-route-id="@Model.Id" method="post">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Finalizar Entrega
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+</div>

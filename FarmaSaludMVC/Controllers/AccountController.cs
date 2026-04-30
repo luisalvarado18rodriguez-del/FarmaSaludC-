@@ -70,45 +70,54 @@ namespace FarmaSaludMVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(string email, string password)
         {
-            // 1. Buscamos al usuario por su email
-            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
+            var usuario = await _context.Usuarios
+                .FirstOrDefaultAsync(u => u.Email == email);
 
-            if (usuario != null)
+            if (usuario != null && SecurityHelper.VerificarPassword(password, usuario.Password))
             {
-                // 2. Verificamos si la cuenta está activa (Baneo)
+                // Validación de Baneo
                 if (!usuario.Activo)
                 {
-                    // CORRECCIÓN: No existe 'model', usamos ModelState directamente
-                    ModelState.AddModelError(string.Empty, "Esta cuenta ha sido inhabilitada por el administrador.");
+                    ModelState.AddModelError(string.Empty, "Cuenta inhabilitada.");
                     return View();
                 }
 
-                // 3. VALIDACIÓN TÉCNICA (Inyectando la sal antigua)
-                bool esValido = security.SecurityHelper.VerificarPassword(password, usuario.Password);
+                var cliente = await _context.Clientes
+                    .FirstOrDefaultAsync(c => c.UsuarioId == usuario.Id);
 
-                if (esValido)
+                var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, usuario.Email),
+            new Claim(ClaimTypes.Role, usuario.Rol),
+            new Claim("UsuarioId", usuario.Id.ToString())
+        };
+
+                if (cliente != null)
                 {
-                    // 4. Creación de Claims y Cookies
-                    var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, usuario.Email),
-                new Claim(ClaimTypes.Role, usuario.Rol),
-                new Claim("UsuarioId", usuario.Id.ToString())
-            };
-
-                    var claimsIdentity = new ClaimsIdentity(claims, Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
-
-                    await HttpContext.SignInAsync(
-                        Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme,
-                        new ClaimsPrincipal(claimsIdentity)
-                    );
-
-                    return RedirectToAction("Catalogo", "Medicamento");
+                    claims.Add(new Claim("ClienteId", cliente.Id.ToString()));
                 }
+
+                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(claimsIdentity)
+                );
+
+                // Guardar datos en sesión
+                HttpContext.Session.SetInt32("UsuarioId", usuario.Id);
+                HttpContext.Session.SetString("ClienteNombre", cliente?.Nombre ?? "Usuario");
+
+                // Redirección por Rol (Ajustar nombres según tu BD)
+                if (usuario.Rol == "Admin" || usuario.Rol == "SuperAdmin")
+                {
+                    return RedirectToAction("Dashboard", "Admin");
+                }
+
+                return RedirectToAction("Catalogo", "Medicamento");
             }
 
-            // 5. Mensaje genérico de error de credenciales
-            ModelState.AddModelError(string.Empty, "Correo o contraseña incorrectos.");
+            ModelState.AddModelError(string.Empty, "Credenciales incorrectas.");
             return View();
         }
 
