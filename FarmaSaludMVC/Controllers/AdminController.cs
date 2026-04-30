@@ -71,5 +71,15 @@ namespace FarmaSaludMVC.Controllers
 
             return View(reserva);
         }
+        [Authorize(Roles = "Admin,SuperAdmin")]
+        [HttpPost]        
+        public async Task<IActionResult> Cancelar(int id)
+        {
+            var exito = await _reservaService.CancelarReservaManualAsync(id);
+            if (exito) TempData["Mensaje"] = "Reserva cancelada y stock restablecido.";
+            else TempData["Error"] = "No se pudo cancelar la reserva.";
+
+            return RedirectToAction("Dashboard");
+        }
     }
 }

@@ -8,12 +8,13 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Gestión de Reservas - FarmaSalud</h2>
         <form asp-action="EjecutarLimpieza" method="post">
-            <button type="submit" class="btn btn-danger">
+            <button type="submit" class="btn btn-danger shadow-sm">
                 <i class="bi bi-clock-history"></i> Ejecutar Limpieza (24h)
             </button>
         </form>
     </div>
 
+    @* Alertas de Feedback *@
     @if (TempData["Mensaje"] != null)
     {
         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -21,8 +22,15 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i> @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
 
-    <table class="table table-striped shadow-sm">
+    <table class="table table-striped shadow-sm align-middle">
         <thead class="table-dark">
             <tr>
                 <th>ID</th>
@@ -37,28 +45,28 @@
             @foreach (var r in Model)
             {
                 <tr>
-                    <td>@r.Id</td>
+                    <td><strong>#@r.Id</strong></td>
                     <td>@r.Cliente?.Nombre @r.Cliente?.Apellido</td>
                     <td>@r.FechaReserva.ToString("g")</td>
                     <td>@r.FechaLimite.ToString("g")</td>
                     <td>
-                        <span class="badge @(r.Estado == "En espera" ? "bg-warning text-dark" : "bg-success")">
-                            @r.Estado
-                        </span>
-                    </td>
-                    <td style="min-width: 320px;">
-                        <div class="d-flex justify-content-end align-items-center">
+                        <span class="badge @(r.Estado == "En espera" ? "bg-warning text-dark" :
+                                                                          r.Estado == "Cancelada" ? "bg-danger" : "bg-success")">
+                        @r.Estado
+                    </span>
+                </td>
+                <td style="min-width: 380px;">
+                    <div class="d-flex justify-content-end align-items-center gap-2">
 
-                            @*Botón de Detalle*@
-                            <div style="width: 100px;" class="me-2">
-                                <a asp-action="DetalleReserva" asp-route-id="@r.Id"
-                                   class="btn btn-sm btn-outline-secondary w-100">
-                                    <i class="bi bi-list-ul"></i> Detalle
-                                </a>
-                            </div>
-                            
-                            <div style="width: 110px;" class="me-2 text-end">
-                                @if (r.ReservasDetalles != null)
+                            @* 1. Detalle *@
+                            <a asp-action="DetalleReserva" asp-route-id="@r.Id"
+                               class="btn btn-sm btn-outline-secondary" style="width: 90px;">
+                                <i class="bi bi-list-ul"></i> Detalle
+                            </a>
+
+                            @* 2. Receta *@
+                            <div style="width: 100px;">
+                            @if (r.ReservasDetalles != null)
                                 {
                                     @foreach (var detalle in r.ReservasDetalles)
                                     {
@@ -74,19 +82,27 @@
                                 }
                             </div>
 
-                            <div style="width: 100px;">
-                                @if (r.Estado == "En espera")
-                                {
-                                    <form asp-action="Finalizar" method="post" style="display:inline;">
-                                        <input type="hidden" name="id" value="@r.Id" />
-                                        <button type="submit" class="btn btn-sm btn-success w-100"
-                                                onclick="return confirm('¿Confirmas que la reserva ha sido entregada?')">
-                                            <i class="bi bi-check-lg"></i> Finalizar
-                                        </button>
-                                    </form>
-                                }
-                            </div>
+                            @if (r.Estado == "En espera")
+                            {
+                                @* 3. Finalizar *@
+                                <form asp-action="Finalizar" method="post">
+                                    <input type="hidden" name="id" value="@r.Id" />
+                                    <button type="submit" class="btn btn-sm btn-success" style="width: 100px;"
+                                            onclick="return confirm('¿Confirmas que la reserva ha sido entregada?')">
+                                        <i class="bi bi-check-lg"></i> Finalizar
+                                    </button>
+                                </form>
 
+                                @* 4. Cancelar (Admin) *@
+                                <form asp-action="Cancelar" method="post">
+                                    <input type="hidden" name="id" value="@r.Id" />
+                                    <button type="submit" class="btn btn-sm btn-danger" style="width: 40px;"
+                                            title="Anular Reserva"
+                                            onclick="return confirm('¿Seguro que deseas ANULAR esta reserva? El stock se devolverá al inventario.')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            }
                         </div>
                     </td>
                 </tr>

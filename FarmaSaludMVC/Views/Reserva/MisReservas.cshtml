@@ -7,37 +7,69 @@
 <div class="container mt-4">
     <h2>Mis Reservas Realizadas</h2>
 
+    @* Bloque de Alertas *@
     @if (TempData["Exito"] != null)
     {
-        <div class="alert alert-success">@TempData["Exito"]</div>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill"></i> @TempData["Exito"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="bi bi-info-circle-fill"></i> @TempData["Mensaje"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i> @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
     }
 
-    <table class="table table-hover">
+    <table class="table table-hover shadow-sm">
         <thead class="table-dark">
             <tr>
                 <th>ID</th>
                 <th>Fecha de Reserva</th>
                 <th>Recoger Antes de</th>
                 <th>Estado</th>
-                <th>Acciones</th>
+                <th class="text-center">Acciones</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var r in Model)
             {
                 <tr>
-                    <td>@r.Id</td>
+                    <td><strong>#@r.Id</strong></td>
                     <td>@r.FechaReserva.ToString("dd/MM/yyyy HH:mm")</td>
                     <td>@r.FechaLimite.ToString("dd/MM/yyyy HH:mm")</td>
                     <td>
-                        <span class="badge @(r.Estado == "En espera" ? "bg-warning" : "bg-success")">
-                            @r.Estado
-                        </span>
-                    </td>
-                    <td>
-                        <a asp-action="Detalles" asp-route-id="@r.Id" class="btn btn-sm btn-info text-white">
+                        <span class="badge @(r.Estado == "En espera" ? "bg-warning text-dark" :
+                                                                          r.Estado == "Cancelada" ? "bg-danger" : "bg-success")">
+                        @r.Estado
+                    </span>
+                </td>
+                <td class="text-center">
+                    <div class="btn-group">
+                        <a asp-action="Detalles" asp-route-id="@r.Id" class="btn btn-sm btn-info text-white me-2">
                             <i class="bi bi-search"></i> Ver detalles
                         </a>
+
+                        @if (r.Estado == "En espera")
+                            {
+                                <form asp-action="ClienteCancelar" asp-route-id="@r.Id" method="post"
+                                      onsubmit="return confirm('¿Estás seguro de que deseas cancelar esta reserva?')">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-x-circle"></i> Cancelar
+                                    </button>
+                                </form>
+                            }
+                        </div>
                     </td>
                 </tr>
             }
