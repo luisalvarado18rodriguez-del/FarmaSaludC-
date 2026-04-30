@@ -1,4 +1,4 @@
-﻿@model IEnumerable<FarmaSaludMVC.Models.Medicamento>
+@model IEnumerable<FarmaSaludMVC.Models.Medicamento>
 
 @{
     ViewData["Title"] = "Gestión de Inventario";
@@ -56,11 +56,15 @@
                                 <small class="text-muted">Lote: @item.Lote</small>
                             </td>
                             <td>@item.Categoria?.Nombre</td>
-                            <td>S/ @item.Precio.ToString("F2")</td>
-                            <td>
+                            <td data-order="@item.Precio.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)">
+                                S/ @item.Precio.ToString("F2")
+                            </td>
+                            <td data-order="@item.Stock">
+                                @* <-- Esto le dice a DataTables el valor numérico real *@
                                 <span class="badge @claseStock">@item.Stock uds</span>
                             </td>
-                            <td>
+                            <td data-order="@item.FechaVencimiento.ToString("yyyyMMdd")">
+                                @* <-- Ordena por AñoMesDía *@
                                 <span class="@(proximoAVencer ? "text-danger fw-bold" : "")">
                                     @item.FechaVencimiento.ToString("dd/MM/yyyy")
                                     @if (proximoAVencer)
@@ -91,23 +95,22 @@
 </div>
 
 @section Scripts {
-
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script>
         $(document).ready(function () {
-            // Esto inicializa el "Filtro Operativo" (DataTables)
+            // Inicializamos la tabla sobre la estructura que ya cargó el _Layout
             $('#tablaMedicamentos').DataTable({
                 "language": {
                     "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
                 },
-                "order": [[4, "asc"]], // Ordena automáticamente por Stock (columna 4)
+                "order": [[4, "asc"]],
                 "columnDefs": [
-                    { "orderable": false, "targets": [0, 6] } // La imagen y las acciones no se ordenan
+                    { "orderable": false, "targets": [0, 6] }, // Imagen y Acciones
+                    { "type": "num", "targets": 4 },           // Stock como número
+                    { "type": "num", "targets": 5 }            // Vencimiento (yyyyMMdd) como número
                 ]
             });
         });
     </script>
+}
 
 }
