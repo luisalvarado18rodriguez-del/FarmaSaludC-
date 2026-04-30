@@ -9,7 +9,7 @@ namespace FarmaSaludMVC.Services
     public class ReservaService : IReservaService
     {
         private readonly AppDbContext _context;
-        private readonly IWebHostEnvironment _env; // Para acceder a wwwroot
+        private readonly IWebHostEnvironment _env;
 
         public ReservaService(AppDbContext context, IWebHostEnvironment env)
         {
@@ -22,19 +22,18 @@ namespace FarmaSaludMVC.Services
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // 1. Crear la cabecera de la Reserva
                 var nuevaReserva = new Reserva
                 {
                     ClienteId = clienteId,
                     FechaReserva = DateTime.Now,
-                    FechaLimite = DateTime.Now.AddHours(24), // Regla de las 24 horas
-                    Estado = "En espera"
+                    FechaLimite = DateTime.Now.AddHours(24),
+                    Estado = "En espera",
+                    Activo = true // Importante inicializarlo en true
                 };
 
                 _context.Reservas.Add(nuevaReserva);
                 await _context.SaveChangesAsync();
 
-                // 2. Procesar los detalles del carrito
                 int indiceReceta = 0;
                 foreach (var item in carrito)
                 {
@@ -46,7 +45,6 @@ namespace FarmaSaludMVC.Services
                         PrecioUnitario = item.Precio
                     };
 
-                    // Lógica de carga de receta si el medicamento la requiere
                     if (item.RequiereReceta && archivosRecetas != null && indiceReceta < archivosRecetas.Count)
                     {
                         detalle.RutaReceta = await GuardarRecetaArchivo(archivosRecetas[indiceReceta]);
@@ -55,9 +53,12 @@ namespace FarmaSaludMVC.Services
 
                     _context.ReservasDetalles.Add(detalle);
 
-                    // 3. Restar Stock (Lógica de negocio)
                     var med = await _context.Medicamentos.FindAsync(item.MedicamentoId);
-                    if (med != null) med.Stock -= item.Cantidad;
+                    if (med != null)
+                    {
+                        if (med.Stock < item.Cantidad) throw new Exception($"Stock insuficiente para {med.Nombre}");
+                        med.Stock -= item.Cantidad;
+                    }
                 }
 
                 await _context.SaveChangesAsync();
@@ -75,8 +76,10 @@ namespace FarmaSaludMVC.Services
         {
             string nombreArchivo = Guid.NewGuid().ToString() + Path.GetExtension(archivo.FileName);
             string rutaCarpeta = Path.Combine(_env.WebRootPath, "uploads", "recetas");
-            string rutaCompleta = Path.Combine(rutaCarpeta, nombreArchivo);
 
+            if (!Directory.Exists(rutaCarpeta)) Directory.CreateDirectory(rutaCarpeta);
+
+            string rutaCompleta = Path.Combine(rutaCarpeta, nombreArchivo);
             using (var stream = new FileStream(rutaCompleta, FileMode.Create))
             {
                 await archivo.CopyToAsync(stream);
@@ -85,10 +88,11 @@ namespace FarmaSaludMVC.Services
         }
 
         public async Task<List<Reserva>> GetReservasByClienteAsync(int clienteId) =>
-            await _context.Reservas.Where(r => r.ClienteId == clienteId).ToListAsync();
+            await _context.Reservas
+                .Where(r => r.ClienteId == clienteId && r.Activo == true)
+                .OrderByDescending(r => r.FechaReserva)
+                .ToListAsync();
 
-       
-        // 1. Obtener todas las reservas activas (para el Admin)
         public async Task<List<Reserva>> GetAllReservasActivasAsync()
         {
             return await _context.Reservas
@@ -99,37 +103,44 @@ namespace FarmaSaludMVC.Services
                 .ToListAsync();
         }
 
-        // 2. Lógica de Cancelación Automática (Regla de las 24 horas)
+        // CORRECCIÓN: Lógica de expiración real (24 horas)
         public async Task<int> ProcesarCancelacionesAutomaticasAsync()
         {
-            // Tiempo de espera después de que pasó a "Terminada"
-            var tiempoLimite = DateTime.Now.AddSeconds(-10);
+            // USANDO TU LÓGICA DE SEGUNDOS PARA PRUEBAS:
+            // Esto buscará reservas creadas hace más de 10 segundos para cancelarlas rápido
+            var tiempoDePrueba = DateTime.Now.AddSeconds(-10);
 
-            // BUSQUEDA: Solo las que ya están "Terminada" y siguen "Activo = true"
-            var paraLimpiar = await _context.Reservas
-                .Where(r => r.Estado == "Terminada"&& r.Activo == true)
+            var expiradas = await _context.Reservas
+                .Include(r => r.ReservasDetalles)
+                .Where(r => r.Estado == "Terminada" && r.FechaReserva < tiempoDePrueba && r.Activo == true)
                 .ToListAsync();
 
-            if (paraLimpiar.Count == 0) return 0;
+            if (expiradas.Count == 0) return 0;
 
-            foreach (var reserva in paraLimpiar)
+            foreach (var reserva in expiradas)
             {
-                // NOTA: Aquí NO devolvemos stock porque si está "Terminada" 
-                // significa que el medicamento ya se vendió.
+                reserva.Estado = "Expirada";
+                reserva.Activo = false;
 
-                reserva.Activo = false; // Esto la quita del Dashboard
+                // Devolvemos stock (Tu lógica de negocio)
+                foreach (var det in reserva.ReservasDetalles)
+                {
+                    var med = await _context.Medicamentos.FindAsync(det.MedicamentoId);
+                    if (med != null) med.Stock += det.Cantidad;
+                }
             }
 
             await _context.SaveChangesAsync();
-            return paraLimpiar.Count;
+            return expiradas.Count;
         }
+
         public async Task<bool> FinalizarReservaAsync(int reservaId)
         {
             var reserva = await _context.Reservas.FindAsync(reservaId);
-
             if (reserva == null) return false;
 
             reserva.Estado = "Terminada";
+            reserva.Activo = false; // Se oculta del dashboard principal al terminar
 
             return await _context.SaveChangesAsync() > 0;
         }
@@ -142,18 +153,19 @@ namespace FarmaSaludMVC.Services
                     .ThenInclude(d => d.Medicamento)
                 .FirstOrDefaultAsync(r => r.Id == reservaId);
         }
+
         public async Task<bool> CancelarReservaManualAsync(int reservaId)
         {
             var reserva = await _context.Reservas
                 .Include(r => r.ReservasDetalles)
                 .FirstOrDefaultAsync(r => r.Id == reservaId);
 
-            if (reserva == null || reserva.Estado == "Terminada") return false;
+            if (reserva == null || reserva.Estado == "Terminada" || reserva.Estado == "Cancelada")
+                return false;
 
             reserva.Estado = "Cancelada";
-            reserva.Activo = false; // Borrado lógico
+            reserva.Activo = false;
 
-            // Devolvemos el stock al inventario
             foreach (var det in reserva.ReservasDetalles)
             {
                 var med = await _context.Medicamentos.FindAsync(det.MedicamentoId);
@@ -162,18 +174,15 @@ namespace FarmaSaludMVC.Services
 
             return await _context.SaveChangesAsync() > 0;
         }
+
         public async Task<bool> CancelarReservaClienteAsync(int reservaId, int clienteId)
         {
-            // Buscamos la reserva asegurando que pertenezca al cliente y esté en espera
             var reserva = await _context.Reservas
-                .Include(r => r.ReservasDetalles)
                 .FirstOrDefaultAsync(r => r.Id == reservaId && r.ClienteId == clienteId && r.Estado == "En espera");
 
             if (reserva == null) return false;
 
-            // Si la encuentra, usamos la lógica de cancelación que ya programamos
             return await CancelarReservaManualAsync(reservaId);
         }
-
     }
 }
