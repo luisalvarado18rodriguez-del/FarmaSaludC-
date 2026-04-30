@@ -142,6 +142,38 @@ namespace FarmaSaludMVC.Services
                     .ThenInclude(d => d.Medicamento)
                 .FirstOrDefaultAsync(r => r.Id == reservaId);
         }
+        public async Task<bool> CancelarReservaManualAsync(int reservaId)
+        {
+            var reserva = await _context.Reservas
+                .Include(r => r.ReservasDetalles)
+                .FirstOrDefaultAsync(r => r.Id == reservaId);
+
+            if (reserva == null || reserva.Estado == "Terminada") return false;
+
+            reserva.Estado = "Cancelada";
+            reserva.Activo = false; // Borrado lógico
+
+            // Devolvemos el stock al inventario
+            foreach (var det in reserva.ReservasDetalles)
+            {
+                var med = await _context.Medicamentos.FindAsync(det.MedicamentoId);
+                if (med != null) med.Stock += det.Cantidad;
+            }
+
+            return await _context.SaveChangesAsync() > 0;
+        }
+        public async Task<bool> CancelarReservaClienteAsync(int reservaId, int clienteId)
+        {
+            // Buscamos la reserva asegurando que pertenezca al cliente y esté en espera
+            var reserva = await _context.Reservas
+                .Include(r => r.ReservasDetalles)
+                .FirstOrDefaultAsync(r => r.Id == reservaId && r.ClienteId == clienteId && r.Estado == "En espera");
+
+            if (reserva == null) return false;
+
+            // Si la encuentra, usamos la lógica de cancelación que ya programamos
+            return await CancelarReservaManualAsync(reservaId);
+        }
 
     }
 }

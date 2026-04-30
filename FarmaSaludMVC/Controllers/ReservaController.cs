@@ -1,6 +1,7 @@
 ﻿using FarmaSaludMVC.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FarmaSaludMVC.Controllers
 {
@@ -74,5 +75,33 @@ namespace FarmaSaludMVC.Controllers
 
             return View(reserva);
         }
+
+        [Authorize(Roles = "Cliente")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ClienteCancelar(int id)
+        {
+            // 1. Obtener el ID del usuario logueado (Usamos "ClienteId" que es el que usas en tus otros métodos)
+            var clienteIdClaim = User.FindFirst("ClienteId")?.Value;
+            if (string.IsNullOrEmpty(clienteIdClaim)) return RedirectToAction("Login", "Account");
+
+            int clienteId = int.Parse(clienteIdClaim);
+
+            // 2. Intentar cancelar a través del servicio
+            // El servicio se encarga de verificar que sea del cliente y esté "En espera"
+            var exito = await _reservaService.CancelarReservaClienteAsync(id, clienteId);
+
+            if (exito)
+            {
+                TempData["Mensaje"] = "Tu reserva ha sido cancelada correctamente y el stock ha sido liberado.";
+            }
+            else
+            {
+                TempData["Error"] = "No se pudo cancelar la reserva. Verifique que el pedido aún esté 'En espera'.";
+            }
+
+            return RedirectToAction("MisReservas");
+        }
+
     }
 }

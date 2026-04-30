@@ -19,5 +19,7 @@ namespace FarmaSaludMVC.Interfaces
         // Lógica de negocio: Cancela reservas fuera de tiempo (24h) y devuelve el stock al inventario
         Task<int> ProcesarCancelacionesAutomaticasAsync();
         Task<bool> FinalizarReservaAsync(int reservaId);
+        Task<bool> CancelarReservaManualAsync(int reservaId);
+        Task<bool> CancelarReservaClienteAsync(int reservaId, int clienteId);
     }
 }
